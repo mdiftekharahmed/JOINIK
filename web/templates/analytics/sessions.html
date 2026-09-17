@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Scan Sessions - JOINIK{% endblock %}
+{% block topbar_title %}Scan Sessions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Scan Sessions Browser</h1>
+        <div class="page-subtitle">Historical telemetry grouped by device scan bursts: {{ device.name }}</div>
+    </div>
+    <div>
+        <a href="{% url 'device_detail' device.id %}" class="btn-ghost"><i class="bi bi-arrow-left"></i> Back to Device</a>
+    </div>
+</div>
+
+<div class="card-joinik">
+    <div class="table-wrap">
+        <table class="table-joinik">
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                    <th>Data Points</th>
+                    <th>Peak Accel</th>
+                    <th>Peak Gyro</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sessions %}
+                <tr>
+                    <td class="mono" style="color: var(--accent);">{{ s.session_id|floatformat:0 }}</td>
+                    <td>{{ s.start_time|date:"M d, Y H:i:s.u" }}</td>
+                    <td>{{ s.end_time|date:"M d, Y H:i:s.u" }}</td>
+                    <td>{{ s.duration_sec|floatformat:2 }}s</td>
+                    <td>{{ s.data_points }}</td>
+                    <td><span class="joinik-badge {% if s.peak_accel > 5.0 %}badge-high{% else %}badge-low{% endif %}">{{ s.peak_accel|floatformat:2 }}g</span></td>
+                    <td><span class="joinik-badge {% if s.peak_gyro > 200.0 %}badge-high{% else %}badge-low{% endif %}">{{ s.peak_gyro|floatformat:1 }}°/s</span></td>
+                    <td>
+                        <button class="btn-ghost" style="font-size: 0.8rem; padding: 4px 8px;" onclick="alert('Session details (Replay/Graphs) coming soon.')">
+                            View Replay
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No scan sessions found. (Requires telemetry with 'scan_timestamp' key)
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

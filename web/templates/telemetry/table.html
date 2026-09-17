@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Telemetry: {{ device.name }} — JOINIK{% endblock %}
+{% block topbar_title %}Telemetry History{% endblock %}
+
+{% block extra_head %}
+<style>
+    .telem-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .telem-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .pagination-info {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+    .pagination-links {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .page-link {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .page-link:hover {
+        border-color: var(--border-accent);
+        color: var(--accent);
+        background: var(--accent-glow);
+    }
+    .page-link.current {
+        background: var(--accent-glow);
+        border-color: var(--accent);
+        color: var(--accent);
+        cursor: default;
+    }
+    /* Sticky first column on mobile */
+    @media (max-width: 767px) {
+        .table-joinik th:first-child,
+        .table-joinik td:first-child {
+            position: sticky;
+            left: 0;
+            background: var(--bg-card);
+            z-index: 1;
+        }
+        .table-joinik tr:hover td:first-child {
+            background: var(--bg-card-hover);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="telem-header">
+    <div>
+        <h1 style="font-size: 1.4rem; font-weight: 700;">{{ device.name }}</h1>
+        <p class="page-subtitle">
+            Telemetry history — {{ total_rows }} total readings
+            <span class="mono" style="margin-left: 8px; font-size: 0.65rem; color: var(--text-muted);">{{ device.tb_device_id }}</span>
+        </p>
+    </div>
+    <div class="telem-actions">
+        <a href="{% url 'telemetry_export_csv' device.tb_device_id %}" class="btn-joinik" id="exportCsvBtn">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+        <a href="{% url 'device_detail' device.tb_device_id %}" class="btn-ghost">
+            <i class="bi bi-speedometer2"></i> Live View
+        </a>
+        <a href="{% url 'device_list' %}" class="btn-ghost">
+            <i class="bi bi-arrow-left"></i> Devices
+        </a>
+    </div>
+</div>
+
+<!-- Table card -->
+<div class="card-joinik" style="overflow: hidden;">
+    <div class="table-wrap">
+        <table class="table-joinik" aria-label="Telemetry data for {{ device.name }}">
+            <thead>
+                <tr>
+                    <th style="white-space: nowrap;">Timestamp</th>
+                    {% for key in keys %}
+                    <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td class="mono" style="font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap;">
+                        {{ row.ts|date:"Y-m-d H:i:s" }}
+                    </td>
+                    {% for key in keys %}
+                    <td>
+                        {% for k, v in row.items %}{% if k == key %}<span class="mono" style="font-size: 0.82rem;">{{ v }}</span>{% endif %}{% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{{ keys|length|add:1 }}" style="text-align: center; padding: 50px; color: var(--text-muted);">
+                        <i class="bi bi-database-x" style="font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.4;"></i>
+                        No telemetry data found for this device.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-bar">
+        <span class="pagination-info">
+            Page {{ page }} of {{ total_pages }}
+            &nbsp;·&nbsp; {{ total_rows }} rows total
+        </span>
+        <div class="pagination-links">
+            {% if has_prev %}
+            <a href="?page=1" class="page-link"><i class="bi bi-chevron-double-left"></i></a>
+            <a href="?page={{ prev_page }}" class="page-link"><i class="bi bi-chevron-left"></i> Prev</a>
+            {% endif %}
+
+            <span class="page-link current">{{ page }}</span>
+
+            {% if has_next %}
+            <a href="?page={{ next_page }}" class="page-link">Next <i class="bi bi-chevron-right"></i></a>
+            <a href="?page={{ total_pages }}" class="page-link"><i class="bi bi-chevron-double-right"></i></a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% block title %}Devices — JOINIK{% endblock %}
+{% block topbar_title %}Devices{% endblock %}
+
+{% block extra_head %}
+<style>
+    .device-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+        height: 100%;
+    }
+    .device-card:hover {
+        border-color: var(--border-accent);
+        box-shadow: 0 0 28px var(--accent-glow);
+        transform: translateY(-2px);
+    }
+    .device-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .device-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .device-id {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        margin-top: 3px;
+        word-break: break-all;
+    }
+    .device-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+    }
+    .device-meta-item {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .device-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    .devices-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 400;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-accent);
+        border-radius: var(--radius);
+        width: 100%;
+        max-width: 460px;
+        padding: 28px;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .modal-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+    }
+    .form-input {
+        width: 100%;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-family: 'Inter', sans-serif;
+        transition: border-color var(--transition);
+        outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .modal-footer-row {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Devices</h1>
+        <p class="page-subtitle">{{ devices|length }} device{{ devices|length|pluralize }} synced from ThingsBoard</p>
+    </div>
+    <button class="btn-joinik" onclick="document.getElementById('addModal').classList.add('open')" id="addDeviceBtn">
+        <i class="bi bi-plus-lg"></i> Add Device
+    </button>
+</div>
+
+<!-- Device Grid -->
+<div class="devices-grid">
+    {% for data in devices %}
+    <div class="device-card">
+        <div class="device-card-top">
+            <div>
+                <div class="device-name">{{ data.obj.name }}</div>
+                <div class="device-id">{{ data.obj.tb_device_id }}</div>
+            </div>
+            {% if data.online %}
+                <span class="joinik-badge badge-online"><i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i> Online</span>
+            {% else %}
+                <span class="joinik-badge badge-offline"><i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i> Offline</span>
+            {% endif %}
+        </div>
+
+        <div class="device-meta">
+            <span class="device-meta-item">
+                <i class="bi bi-shield-half"></i>
+                <span class="joinik-badge badge-{{ data.obj.current_risk_level|lower|default:'normal' }}">
+                    {{ data.obj.current_risk_level|default:"NORMAL" }}
+                </span>
+            </span>
+            {% if data.obj.location_name %}
+            <span class="device-meta-item">
+                <i class="bi bi-geo-alt"></i> {{ data.obj.location_name }}
+            </span>
+            {% endif %}
+            <span class="device-meta-item">
+                <i class="bi bi-clock"></i>
+                {% if data.last_seen %}{{ data.last_seen|date:"d M H:i" }}{% else %}Never{% endif %}
+            </span>
+        </div>
+
+        <div class="device-actions">
+            <a href="{% url 'device_detail' data.obj.tb_device_id %}" class="btn-ghost" style="flex: 1; justify-content: center; font-size: 0.78rem;">
+                <i class="bi bi-speedometer2"></i> Details
+            </a>
+            <a href="{% url 'telemetry_table' data.obj.tb_device_id %}" class="btn-joinik" style="flex: 1; justify-content: center; font-size: 0.78rem;">
+                <i class="bi bi-table"></i> Telemetry
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+        <i class="bi bi-cpu" style="font-size: 3rem; display: block; margin-bottom: 14px; opacity: 0.4;"></i>
+        <p style="font-size: 0.9rem;">No devices yet. They'll appear automatically once synced from ThingsBoard.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-overlay" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="bi bi-plus-circle" style="color: var(--accent);"></i>
+            <span id="addModalTitle">Provision New Device</span>
+            <button onclick="document.getElementById('addModal').classList.remove('open')"
+                    style="margin-left: auto; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;"
+                    aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <form method="POST" id="addDeviceForm">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <input
+                    type="{{ field.field.widget.input_type|default:'text' }}"
+                    id="{{ field.id_for_label }}"
+                    name="{{ field.html_name }}"
+                    class="form-input"
+                    {% if field.field.required %}required{% endif %}
+                    placeholder="Enter {{ field.label|lower }}"
+                    value="{{ field.value|default:'' }}"
+                >
+                {% if field.errors %}
+                <p style="font-size: 0.72rem; color: var(--danger); margin-top: 4px;">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0;">
+                <i class="bi bi-info-circle"></i>
+                This provisions the device in ThingsBoard and generates an access token automatically.
+            </p>
+            <div class="modal-footer-row">
+                <button type="button" class="btn-ghost"
+                        onclick="document.getElementById('addModal').classList.remove('open')">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-joinik">
+                    <i class="bi bi-check-lg"></i> Provision Device
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Close modal on backdrop click
+document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+});
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('addModal').classList.remove('open');
+    }
+});
+// Re-open modal if form has errors
+{% if form.errors %}
+document.getElementById('addModal').classList.add('open');
+{% endif %}
+</script>
+{% endblock %}

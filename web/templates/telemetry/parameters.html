@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sensor Configuration - JOINIK{% endblock %}
+{% block topbar_title %}Sensor Configuration{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Dynamic Parameter Management</h1>
+        <div class="page-subtitle">Configure dynamically discovered telemetry keys and manage their AI compatibility.</div>
+    </div>
+</div>
+
+<div class="card-joinik">
+    <div class="table-wrap">
+        <table class="table-joinik">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Display Name</th>
+                    <th>Data Type</th>
+                    <th>Visualization</th>
+                    <th>AI Input Pipeline</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for param in parameters %}
+                <tr id="row-{{ param.id }}">
+                    <td class="mono" style="color: var(--accent);">{{ param.key }}</td>
+                    <td>{{ param.display_name }}</td>
+                    <td>
+                        <select class="param-select" data-id="{{ param.id }}" data-field="data_type" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            {% for code, label in param.DATA_TYPES %}
+                            <option value="{{ code }}" {% if param.data_type == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="param-select" data-id="{{ param.id }}" data-field="visualization" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            {% for code, label in param.VIZ_CHOICES %}
+                            <option value="{{ code }}" {% if param.visualization == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" class="param-toggle" data-id="{{ param.id }}" data-field="include_in_ai" {% if param.include_in_ai %}checked{% endif %}>
+                            <span class="joinik-badge {% if param.include_in_ai %}badge-success{% else %}badge-offline{% endif %}">
+                                {% if param.include_in_ai %}Enabled{% else %}Quarantined{% endif %}
+                            </span>
+                        </label>
+                    </td>
+                    <td>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" class="param-toggle" data-id="{{ param.id }}" data-field="active" {% if param.active %}checked{% endif %}>
+                            <span style="font-size: 0.8rem; color: {% if param.active %}var(--success){% else %}var(--text-muted){% endif %};">
+                                {% if param.active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </label>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No sensor parameters discovered yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function updateParameter(id, field, value) {
+    const data = {};
+    data[field] = value;
+    
+    fetch(`/telemetry/parameters/${id}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Failed to update parameter: ' + data.error);
+        } else {
+            // Optional: Show toast or slightly pulse row background to indicate save
+            const row = document.getElementById(`row-${id}`);
+            row.style.background = 'rgba(59,158,255,0.1)';
+            setTimeout(() => row.style.background = '', 500);
+            
+            if(field === 'include_in_ai') {
+                window.location.reload(); // Simple reload to update badges
+            }
+        }
+    });
+}
+
+document.querySelectorAll('.param-toggle').forEach(el => {
+    el.addEventListener('change', (e) => {
+        updateParameter(e.target.dataset.id, e.target.dataset.field, e.target.checked);
+    });
+});
+
+document.querySelectorAll('.param-select').forEach(el => {
+    el.addEventListener('change', (e) => {
+        updateParameter(e.target.dataset.id, e.target.dataset.field, e.target.value);
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

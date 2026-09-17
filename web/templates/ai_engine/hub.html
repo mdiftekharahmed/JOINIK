@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}AI Engine Hub — JOINIK{% endblock %}
+{% block topbar_title %}AI Engine Hub{% endblock %}
+
+{% block extra_head %}
+<style>
+    .ai-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    .model-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .model-card.active-model {
+        border-color: var(--accent);
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .model-card:hover {
+        transform: translateY(-2px);
+    }
+    .model-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .model-tag {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .features-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+    }
+    .feature-badge {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        padding: 3px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .model-stat {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .model-stat:last-child { border-bottom: none; }
+    
+    /* Upload Section */
+    .upload-card {
+        background: rgba(14, 165, 233, 0.05);
+        border: 1px dashed var(--accent);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    .upload-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+    }
+    @media (max-width: 768px) {
+        .upload-form { grid-template-columns: 1fr; }
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+    .form-input {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>AI Models Hub</h1>
+        <p class="page-subtitle">Manage and deploy machine learning models for anomaly detection.</p>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div style="background: rgba(34,197,94,0.1); border: 1px solid #22c55e; color: #22c55e; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 0.85rem;">
+        {{ message }}
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Upload New Model -->
+<div class="upload-card">
+    <div style="font-weight: 600; color: var(--accent); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-cloud-arrow-up"></i> Deploy New Model
+    </div>
+    <form method="POST" action="{% url 'ai_model_upload' %}" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Version Tag</label>
+            <input type="text" name="version_tag" class="form-input" placeholder="v1.0-randomforest" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Model File (.pkl or .joblib)</label>
+            <input type="file" name="model_file" class="form-input" accept=".pkl,.joblib" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">Feature List (JSON array)</label>
+            <input type="text" name="feature_list" class="form-input" value='["temperature", "vibration_intensity", "motion", "cctv_cut"]' required style="font-family: 'JetBrains Mono', monospace;">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn-joinik" style="width: max-content;"><i class="bi bi-upload"></i> Upload & Register</button>
+        </div>
+    </form>
+</div>
+
+<!-- Models List -->
+<h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: var(--text-primary);">Model Registry</h3>
+<div class="ai-grid">
+    {% for model in models %}
+    <div class="model-card {% if model.is_active %}active-model{% endif %}">
+        <div class="model-header">
+            <div class="model-tag">
+                <i class="bi bi-robot"></i> {{ model.version_tag }}
+            </div>
+            {% if model.is_active %}
+                <span class="joinik-badge" style="background: var(--accent); color: #fff;">ACTIVE</span>
+            {% else %}
+                <form method="POST" action="{% url 'ai_model_activate' model.id %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ghost" style="padding: 4px 10px; font-size: 0.7rem;">Activate</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Features Required:</div>
+            <div class="features-list">
+                {% for f in model.feature_list %}
+                    <span class="feature-badge">{{ f }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div style="margin-top: 8px;">
+            <div class="model-stat">
+                <span>Upload Date</span>
+                <span>{{ model.trained_at|date:"M d, Y" }}</span>
+            </div>
+            <div class="model-stat">
+                <span>File Name</span>
+                <span class="mono" style="font-size: 0.7rem;">{{ model.model_file.name|default:"None" }}</span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius);">
+        <p>No AI models deployed yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

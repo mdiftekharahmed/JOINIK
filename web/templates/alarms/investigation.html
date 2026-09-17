@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Incident Investigation - JOINIK{% endblock %}
+{% block topbar_title %}Event Investigation{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Incident Investigation: #{{ alarm.id|stringformat:"s"|slice:":8" }}</h1>
+        <div class="page-subtitle">Device: {{ alarm.device.name }} • Triggered: {{ alarm.triggered_at|date:"M d, Y H:i:s" }}</div>
+    </div>
+    <div>
+        <a href="{% url 'alarm_list' %}" class="btn-ghost"><i class="bi bi-arrow-left"></i> Back to Alarms</a>
+    </div>
+</div>
+
+<div class="grid-2col">
+    <!-- Left Column: Details -->
+    <div>
+        <!-- AI Evaluation -->
+        <div class="card-joinik mb-4">
+            <div class="card-header-joinik">
+                <span class="card-label">AI Assessment</span>
+            </div>
+            <div class="card-body-joinik">
+                <div class="stat-value" style="color: var(--danger);">{{ alarm.risk_score|floatformat:1 }}</div>
+                <div class="stat-label">AI Risk Score (Confidence: {{ alarm.ai_confidence|floatformat:2 }})</div>
+                
+                <div class="divider"></div>
+                
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Triggering Sensors:</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    {% for key in alarm.triggering_keys %}
+                        <span class="joinik-badge badge-high">{{ key|upper }}</span>
+                    {% empty %}
+                        <span class="text-muted">No explicit keys</span>
+                    {% endfor %}
+                </div>
+                
+                {% if alarm.assessment and alarm.assessment.alarm_reason %}
+                <div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">AI Reason</div>
+                    <div style="font-size: 0.85rem; color: var(--text-primary);">{{ alarm.assessment.alarm_reason }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Resolution Details -->
+        <div class="card-joinik">
+            <div class="card-header-joinik">
+                <span class="card-label">Incident Status</span>
+                <span class="joinik-badge 
+                    {% if alarm.status == 'EMERGENCY_NOTIFIED' or alarm.status == 'ESCALATING' %}badge-critical
+                    {% elif alarm.status == 'PENDING' %}badge-high
+                    {% elif alarm.status == 'RESOLVED' or alarm.status == 'CANCELLED' %}badge-normal
+                    {% else %}badge-low{% endif %}">
+                    {{ alarm.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body-joinik">
+                <ul style="list-style: none; font-size: 0.85rem; color: var(--text-secondary); padding: 0;">
+                    <li style="margin-bottom: 8px;">
+                        <strong>Triggered:</strong> <span style="color: var(--text-primary);">{{ alarm.triggered_at|date:"H:i:s" }}</span>
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>10s Deadline:</strong> <span style="color: var(--text-primary);">{{ alarm.cancellation_deadline|date:"H:i:s"|default:"N/A" }}</span>
+                    </li>
+                    {% if alarm.status == 'CANCELLED' %}
+                    <li style="margin-bottom: 8px;">
+                        <strong>Cancelled By:</strong> <span style="color: var(--accent);">{{ alarm.cancelled_by|default:"Unknown User" }}</span>
+                    </li>
+                    <li>
+                        <strong>Reason:</strong> <span style="color: var(--text-primary);">{{ alarm.cancellation_reason|default:"No reason provided" }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Timeline & Data -->
+    <div>
+        <!-- Sensor Correlation Dashboard -->
+        <div class="card-joinik mb-4">
+            <div class="card-header-joinik">
+                <span class="card-label">Sensor Correlation Cascade</span>
+            </div>
+            <div class="card-body-joinik" style="padding-top: 16px; overflow-x: auto;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for event in correlation_events %}
+                    <div style="display: flex; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                        <div style="width: 80px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: {% if event.offset_ms < 0 %}var(--warning){% elif event.offset_ms == 0 %}var(--danger){% else %}var(--accent){% endif %};">
+                            {% if event.offset_ms > 0 %}+{% endif %}{{ event.offset_ms }}ms
+                        </div>
+                        
+                        <div style="flex: 1; padding: 0 16px;">
+                            {% if event.type == 'ai_eval' %}
+                            <div style="height: 2px; width: 100%; background: var(--danger); position: relative;">
+                                <div style="position: absolute; left: 50%; top: -4px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; transform: translateX(-50%); box-shadow: 0 0 10px var(--danger);"></div>
+                            </div>
+                            {% else %}
+                            <div style="height: 1px; width: 100%; background: var(--border); position: relative;">
+                                <div style="position: absolute; left: {% widthratio event.offset_ms 5000 50 %}; top: -3px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; transform: translateX(-50%);"></div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div style="width: 200px; font-size: 0.85rem; font-weight: 600; color: {% if event.type == 'ai_eval' %}var(--danger){% else %}var(--text-primary){% endif %}; text-align: right;">
+                            {{ event.label }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px;">
+                        No significant sensor spikes found near trigger time.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-joinik">
+            <div class="card-header-joinik">
+                <span class="card-label">Escalation Audit Trail</span>
+            </div>
+            <div class="card-body-joinik" style="padding-top: 16px;">
+                <div style="border-left: 2px solid var(--border); padding-left: 16px; margin-left: 8px;">
+                    
+                    <!-- Trigger Event -->
+                    <div style="position: relative; margin-bottom: 24px;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 16px; height: 16px; background: var(--bg-surface); border: 2px solid var(--danger); border-radius: 50%;"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">{{ alarm.triggered_at|date:"H:i:s.u" }}</div>
+                        <div style="font-size: 0.95rem; font-weight: 600; color: var(--danger);">Alarm Triggered</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">AI Risk Assessment classified event as high risk.</div>
+                    </div>
+                    
+                    <!-- 10s Window -->
+                    <div style="position: relative; margin-bottom: 24px;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 16px; height: 16px; background: var(--bg-surface); border: 2px solid var(--warning); border-radius: 50%;"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">{{ alarm.triggered_at|date:"H:i:s.u" }} - {{ alarm.cancellation_deadline|date:"H:i:s.u"|default:"N/A" }}</div>
+                        <div style="font-size: 0.95rem; font-weight: 600; color: var(--warning);">Cancellation Window</div>
+                        {% if alarm.status == 'CANCELLED' %}
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Client submitted cancellation request. Escalation halted.</div>
+                        {% else %}
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">No valid cancellation received within 10 seconds.</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Escalation -->
+                    {% if alarm.status != 'CANCELLED' and alarm.status != 'PENDING' %}
+                    <div style="position: relative; margin-bottom: 24px;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 16px; height: 16px; background: var(--bg-surface); border: 2px solid var(--accent); border-radius: 50%;"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">{{ alarm.cancellation_deadline|date:"H:i:s.u"|default:alarm.triggered_at|date:"H:i:s" }}</div>
+                        <div style="font-size: 0.95rem; font-weight: 600; color: var(--accent);">Emergency Escalation Activated</div>
+                        
+                        <!-- Notifications -->
+                        <div style="margin-top: 12px; display: grid; gap: 8px;">
+                            {% for notif in notifications %}
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span style="color: var(--text-primary); font-weight: 600;">{{ notif.contact.name }}</span>
+                                    <span class="joinik-badge {% if notif.status == 'DELIVERED' %}badge-success{% else %}badge-low{% endif %}">{{ notif.status }}</span>
+                                </div>
+                                <div style="color: var(--text-secondary);">Via {{ notif.contact.channel }}: {{ notif.contact.target_address }}</div>
+                                <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px;">Sent at {{ notif.sent_at|date:"H:i:s.u" }}</div>
+                            </div>
+                            {% empty %}
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">No notifications recorded.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Resolution -->
+                    {% if alarm.status == 'RESOLVED' or alarm.status == 'ACKNOWLEDGED' %}
+                    <div style="position: relative;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 16px; height: 16px; background: var(--bg-surface); border: 2px solid var(--success); border-radius: 50%;"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">{{ alarm.resolved_at|date:"H:i:s.u"|default:alarm.acknowledged_at|date:"H:i:s.u" }}</div>
+                        <div style="font-size: 0.95rem; font-weight: 600; color: var(--success);">Incident {{ alarm.get_status_display }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">By {{ alarm.resolved_by|default:alarm.acknowledged_by|default:"System" }}</div>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

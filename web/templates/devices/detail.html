@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% block title %}{{ device.name }} — JOINIK{% endblock %}
+{% block topbar_title %}{{ device.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Risk display ── */
+    .risk-ring-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 16px 20px;
+        gap: 10px;
+    }
+    .risk-score-number {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1;
+        transition: color 0.4s;
+    }
+    .risk-score-label {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    .risk-alarm-flash {
+        animation: alarm-border 0.4s ease-in-out 4;
+    }
+    @keyframes alarm-border {
+        0%, 100% { box-shadow: none; border-color: var(--border); }
+        50%       { box-shadow: 0 0 30px rgba(220,38,38,0.5); border-color: #dc2626; }
+    }
+
+    /* ── Info rows ── */
+    .info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.845rem;
+        gap: 8px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { color: var(--text-muted); font-size: 0.78rem; flex-shrink: 0; }
+    .info-row-val { color: var(--text-primary); font-weight: 500; text-align: right; }
+
+    /* ── Alarms list ── */
+    .alarm-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 18px;
+        border-bottom: 1px solid var(--border);
+        gap: 8px;
+        font-size: 0.82rem;
+    }
+    .alarm-item:last-child { border-bottom: none; }
+
+    /* ── WS connection indicator ── */
+    .ws-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.68rem;
+        padding: 3px 10px;
+        border-radius: 99px;
+        font-weight: 600;
+    }
+    .ws-connecting { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    .ws-connected  { background: rgba(34,197,94,0.12);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3);  }
+    .ws-error      { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3);  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1>{{ device.name }}</h1>
+        <p class="page-subtitle mono" style="font-size: 0.68rem;">{{ device.tb_device_id }}</p>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <span class="ws-indicator ws-connecting" id="wsStatus">
+            <span class="live-dot" style="background: #f59e0b;"></span> Connecting…
+        </span>
+        <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn-joinik">
+            <i class="bi bi-table"></i> Full History
+        </a>
+        <a href="{% url 'scan_sessions_list' device.tb_device_id %}" class="btn-ghost">
+            <i class="bi bi-clock-history"></i> Sessions
+        </a>
+        <a href="{% url 'device_list' %}" class="btn-ghost">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Layout -->
+<div class="grid-2col">
+
+    <!-- Left column -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- Device info -->
+        <div class="card-joinik">
+            <div class="card-header-joinik">
+                <span class="card-label">Device Info</span>
+                {% if online %}
+                    <span class="joinik-badge badge-online"><i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i> Online</span>
+                {% else %}
+                    <span class="joinik-badge badge-offline"><i class="bi bi-circle-fill" style="font-size: 0.45rem;"></i> Offline</span>
+                {% endif %}
+            </div>
+            <div class="card-body-joinik">
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-geo-alt"></i> Location</span>
+                    <span class="info-row-val">{{ device.location_name|default:"N/A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-hdd-network"></i> MAC</span>
+                    <span class="info-row-val mono" style="font-size: 0.8rem;">{{ device.mac_address|default:"N/A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-clock-history"></i> Last Seen</span>
+                    <span class="info-row-val" style="font-size: 0.8rem;">{{ last_seen|default:"Never" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk score -->
+        <div class="card-joinik" id="riskCard">
+            <div class="card-header-joinik">
+                <span class="card-label">AI Risk Score</span>
+                <i class="bi bi-shield-fill-exclamation" style="color: var(--accent);"></i>
+            </div>
+            <div class="risk-ring-wrap">
+                <div class="risk-score-number" id="riskScoreValue">
+                    {{ device.current_risk_score|floatformat:1 }}
+                </div>
+                <span class="joinik-badge badge-{{ device.current_risk_level|lower|default:'normal' }}"
+                      id="riskLevelBadge"
+                      style="font-size: 0.8rem; padding: 5px 16px;">
+                    {{ device.current_risk_level|default:"NORMAL" }}
+                </span>
+                <span class="risk-score-label">updated live</span>
+            </div>
+            
+            <!-- AI Generated Parameters -->
+            <div style="padding: 16px; border-top: 1px solid var(--border); font-size: 0.8rem;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">AI-Generated Parameters</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="color: var(--text-secondary);">Alarm:</div>
+                    <div id="aiParamAlarm" style="font-weight: 600; color: var(--text-primary); text-align: right;">False</div>
+                    
+                    <div style="color: var(--text-secondary);">Risk Level:</div>
+                    <div id="aiParamLevel" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ device.current_risk_level|default:"NORMAL" }}</div>
+                    
+                    <div style="color: var(--text-secondary);">Risk Score:</div>
+                    <div id="aiParamScore" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ device.current_risk_score|floatformat:1 }}</div>
+                    
+                    <div style="color: var(--text-secondary);">Confidence:</div>
+                    <div id="aiParamConf" style="font-weight: 600; color: var(--text-primary); text-align: right;">95.0%</div>
+                </div>
+                <div style="margin-top: 8px; color: var(--text-secondary);">
+                    Reason: <span id="aiParamReason" style="font-weight: 600; color: var(--text-primary);">N/A</span>
+                </div>
+            </div>
+            
+            <!-- SHAP Explainability -->
+            <div style="padding: 0 16px 16px; border-top: 1px solid var(--border); display: none;" id="shapWrap">
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin: 12px 0 8px; text-transform: uppercase; letter-spacing: 0.05em;">Risk Drivers (SHAP)</div>
+                <div id="shapBars" style="display: flex; flex-direction: column; gap: 6px;">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent alarms -->
+        <div class="card-joinik">
+            <div class="card-header-joinik" style="padding-bottom: 12px;">
+                <span class="card-label">Recent Alarms</span>
+            </div>
+            {% for alarm in alarms %}
+            <div class="alarm-item">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span class="joinik-badge badge-{{ alarm.risk_level|lower }}">{{ alarm.risk_level }}</span>
+                    <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;">
+                        {{ alarm.triggered_at|date:"d M Y, H:i:s" }}
+                    </span>
+                </div>
+                <span class="joinik-badge" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border);">
+                    {{ alarm.status }}
+                </span>
+            </div>
+            {% empty %}
+            <div style="padding: 20px 18px; font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-check-circle" style="color: var(--success);"></i>
+                No recent alarms — all clear
+            </div>
+            {% endfor %}
+        </div>
+
+    </div><!-- /left -->
+
+    <!-- Right column: sensor grid -->
+    <div class="card-joinik" style="display: flex; flex-direction: column;">
+        <div class="card-header-joinik" style="padding: 16px 18px;">
+            <span style="font-size: 0.9rem; font-weight: 600;">Live Sensor Readings</span>
+            <span style="font-size: 0.7rem; color: var(--text-muted);" id="lastUpdateTs">–</span>
+        </div>
+        <div style="padding: 16px; flex: 1;">
+            <div class="grid-sensors" id="sensorGrid">
+                {% for key, data in latest.items %}
+                <div class="sensor-card" id="sensor-wrap-{{ key }}">
+                    <div class="sensor-key">{{ key }}</div>
+                    <div class="sensor-val" id="sensor-val-{{ key }}">{{ data.value }}</div>
+                    <div class="sensor-ts" id="sensor-ts-{{ key }}">{{ data.ts|date:"H:i:s"|default:"–" }}</div>
+                </div>
+                {% empty %}
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 0.85rem;" id="noSensorsMsg">
+                    <i class="bi bi-reception-0" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                    Waiting for sensor data…
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div><!-- /right -->
+
+</div><!-- /grid -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const DEVICE_ID = "{{ device.tb_device_id }}";
+const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${proto}//${location.host}/ws/telemetry/${DEVICE_ID}/`;
+
+let socket = null;
+let reconnectTimer = null;
+let reconnectDelay = 2000;
+
+function setWsStatus(state) {
+    const el = document.getElementById('wsStatus');
+    el.className = 'ws-indicator';
+    if (state === 'connecting') {
+        el.classList.add('ws-connecting');
+        el.innerHTML = '<span class="live-dot" style="background:#f59e0b"></span> Connecting…';
+    } else if (state === 'connected') {
+        el.classList.add('ws-connected');
+        el.innerHTML = '<span class="live-dot"></span> Live';
+    } else {
+        el.classList.add('ws-error');
+        el.innerHTML = '<i class="bi bi-wifi-off"></i> Reconnecting…';
+    }
+}
+
+function connectWS() {
+    setWsStatus('connecting');
+    socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+        setWsStatus('connected');
+        reconnectDelay = 2000;
+    };
+
+    socket.onmessage = (e) => {
+        const payload = JSON.parse(e.data);
+        if (payload.type === 'telemetry_update') {
+            updateSensors(payload.data);
+        } else if (payload.type === 'risk_update') {
+            updateRisk(payload.data);
+        }
+    };
+
+    socket.onclose = () => {
+        setWsStatus('error');
+        // Exponential back-off reconnect
+        reconnectTimer = setTimeout(() => {
+            reconnectDelay = Math.min(reconnectDelay * 1.5, 30000);
+            connectWS();
+        }, reconnectDelay);
+    };
+
+    socket.onerror = () => { socket.close(); };
+}
+
+function updateSensors(data) {
+    const grid = document.getElementById('sensorGrid');
+    const noMsg = document.getElementById('noSensorsMsg');
+    if (noMsg) noMsg.style.display = 'none';
+
+    const now = new Date();
+    document.getElementById('lastUpdateTs').textContent =
+        'Updated ' + now.toLocaleTimeString('en-US', {hour12: false});
+
+    for (const [key, info] of Object.entries(data)) {
+        let wrap = document.getElementById(`sensor-wrap-${key}`);
+
+        if (!wrap) {
+            // Create new card dynamically
+            wrap = document.createElement('div');
+            wrap.className = 'sensor-card';
+            wrap.id = `sensor-wrap-${key}`;
+            wrap.innerHTML = `
+                <div class="sensor-key">${key}</div>
+                <div class="sensor-val" id="sensor-val-${key}">–</div>
+                <div class="sensor-ts" id="sensor-ts-${key}">–</div>
+            `;
+            grid.appendChild(wrap);
+        }
+
+        const valEl = document.getElementById(`sensor-val-${key}`);
+        const tsEl  = document.getElementById(`sensor-ts-${key}`);
+
+        if (valEl) {
+            const newVal = typeof info.value === 'boolean' ? (info.value ? 'true' : 'false') : info.value;
+            if (valEl.textContent != newVal) {
+                valEl.textContent = newVal;
+                wrap.classList.add('flash');
+                setTimeout(() => wrap.classList.remove('flash'), 350);
+            }
+        }
+        if (tsEl) tsEl.textContent = info.ts || '–';
+    }
+}
+
+function updateRisk(data) {
+    const scoreEl = document.getElementById('riskScoreValue');
+    const badgeEl = document.getElementById('riskLevelBadge');
+    const cardEl  = document.getElementById('riskCard');
+    const shapWrap = document.getElementById('shapWrap');
+    const shapBars = document.getElementById('shapBars');
+
+    if (scoreEl) scoreEl.textContent = parseFloat(data.risk_score || data.score).toFixed(1);
+    if (badgeEl) {
+        const level = data.risk_level || data.level;
+        badgeEl.textContent = level;
+        badgeEl.className = `joinik-badge badge-${level.toLowerCase()} `;
+        badgeEl.style.cssText = 'font-size: 0.8rem; padding: 5px 16px;';
+    }
+
+    if (data.alarm && cardEl) {
+        cardEl.classList.add('risk-alarm-flash');
+        setTimeout(() => cardEl.classList.remove('risk-alarm-flash'), 2000);
+    }
+    
+    // AI Generated Parameters UI Mapping
+    const aiAlarm = document.getElementById('aiParamAlarm');
+    const aiLevel = document.getElementById('aiParamLevel');
+    const aiScore = document.getElementById('aiParamScore');
+    const aiConf  = document.getElementById('aiParamConf');
+    const aiReason = document.getElementById('aiParamReason');
+    
+    if (aiAlarm && data.alarm !== undefined) aiAlarm.textContent = data.alarm ? 'True' : 'False';
+    if (aiLevel && data.risk_level !== undefined) aiLevel.textContent = data.risk_level;
+    if (aiScore && data.risk_score !== undefined) aiScore.textContent = parseFloat(data.risk_score).toFixed(1);
+    if (aiConf && data.confidence !== undefined) aiConf.textContent = parseFloat(data.confidence).toFixed(1) + '%';
+    if (aiReason && data.alarm_reason !== undefined) aiReason.textContent = data.alarm_reason;
+    
+    if (data.shap && Object.keys(data.shap).length > 0) {
+        shapWrap.style.display = 'block';
+        shapBars.innerHTML = '';
+        
+        // Sort features by impact
+        const entries = Object.entries(data.shap).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 4);
+        const maxVal = Math.max(...entries.map(e => Math.abs(e[1])), 0.1);
+        
+        for (const [feat, val] of entries) {
+            const width = Math.min((Math.abs(val) / maxVal) * 100, 100);
+            const color = val > 0 ? '#ef4444' : '#3b82f6';
+            shapBars.innerHTML += `
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-secondary);">
+                        <span>${feat}</span>
+                        <span style="color: ${color}">${val > 0 ? '+' : ''}${val.toFixed(2)}</span>
+                    </div>
+                    <div style="background: var(--bg-surface); height: 4px; border-radius: 2px; overflow: hidden; display: flex; ${val < 0 ? 'justify-content: flex-end;' : ''}">
+                        <div style="width: ${width}%; background: ${color}; height: 100%; border-radius: 2px;"></div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        if(shapWrap) shapWrap.style.display = 'none';
+    }
+}
+
+// Start connection
+connectWS();
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Django
+*.sqlite3
+*.log
+
+# Environment variables
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat-schedule-shm
+celerybeat-schedule-wal
+
+# VS Code / IDEs
+.vscode/
+.idea/
+
+# Static and media files
+/web/media/
+/web/staticfiles/

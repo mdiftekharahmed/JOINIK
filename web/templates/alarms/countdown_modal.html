@@ -1,0 +1,279 @@
+<!-- 10-Second Dead-Hand Modal -->
+<style>
+    .dead-hand-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(8, 12, 20, 0.95);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        animation: alarm-bg-flash 2s infinite;
+    }
+    .dead-hand-modal.active { display: flex; }
+    
+    @keyframes alarm-bg-flash {
+        0%, 100% { background: rgba(8, 12, 20, 0.95); }
+        50% { background: rgba(100, 15, 15, 0.95); }
+    }
+    
+    .alarm-box {
+        background: var(--bg-card);
+        border: 2px solid var(--danger);
+        border-radius: var(--radius);
+        padding: 40px;
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 0 80px rgba(239, 68, 68, 0.3);
+    }
+    
+    .alarm-title {
+        color: var(--danger);
+        font-size: 2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 20px;
+    }
+    
+    .countdown-timer {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 6rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #fff;
+        text-shadow: 0 0 20px rgba(255,255,255,0.5);
+        margin-bottom: 10px;
+    }
+    
+    .countdown-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 30px;
+    }
+    
+    .alarm-details {
+        text-align: left;
+        background: rgba(0,0,0,0.3);
+        padding: 20px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 30px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .detail-row:last-child { margin-bottom: 0; }
+    .detail-label { color: var(--text-secondary); }
+    .detail-value { color: #fff; font-weight: 600; }
+    
+    .btn-cancel-alarm {
+        background: var(--danger);
+        color: #fff;
+        border: none;
+        padding: 18px 40px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        width: 100%;
+    }
+    
+    .btn-cancel-alarm:hover {
+        background: #dc2626;
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+        transform: scale(1.02);
+    }
+
+    /* Cancel Form overlay */
+    .cancel-form {
+        display: none;
+        margin-top: 20px;
+        text-align: left;
+    }
+    .cancel-form.active { display: block; }
+    
+    .form-input {
+        width: 100%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border);
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 16px;
+        font-family: inherit;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+</style>
+
+<div class="dead-hand-modal" id="deadHandModal">
+    <div class="alarm-box">
+        <div class="alarm-title">Potential Security Incident</div>
+        
+        <div class="countdown-timer" id="countdownTimer">00:10</div>
+        <div class="countdown-label">Time remaining to request cancellation</div>
+        
+        <div class="alarm-details">
+            <div class="detail-row">
+                <span class="detail-label">Device:</span>
+                <span class="detail-value" id="dhDeviceName">Loading...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Detected:</span>
+                <span class="detail-value" id="dhDetected">Loading...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">AI Risk Score:</span>
+                <span class="detail-value" id="dhScore">Loading...</span>
+            </div>
+        </div>
+        
+        <button class="btn-cancel-alarm" id="btnShowCancelForm">Stop / Request Alarm Cancellation</button>
+        
+        <div class="cancel-form" id="cancelForm">
+            <input type="password" id="cancelPin" class="form-input" placeholder="Enter 4-Digit PIN" maxlength="4">
+            <select id="cancelReason" class="form-input">
+                <option value="">Select Reason...</option>
+                <option value="False Alarm">False Alarm</option>
+                <option value="Authorized Maintenance">Authorized Maintenance</option>
+                <option value="Accidental Activation">Accidental Activation</option>
+            </select>
+            <button class="btn-joinik" style="width:100%; justify-content:center; padding:14px; font-size:1rem;" id="btnSubmitCancel">Confirm Cancellation</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let alarmTimerInterval;
+    let alarmDeadline;
+    let currentAlarmId = null;
+
+    // Connect to global alarms websocket
+    const alarmProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const alarmWs = new WebSocket(`${alarmProtocol}//${window.location.host}/ws/alarms/`);
+
+    alarmWs.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'alarm_pending') {
+            triggerDeadHand(data.alarm_data);
+        }
+    };
+
+    function triggerDeadHand(data) {
+        currentAlarmId = data.alarm_id;
+        
+        // Parse deadline
+        alarmDeadline = new Date(data.deadline).getTime();
+        
+        // Update UI
+        document.getElementById('dhDeviceName').innerText = data.device_name;
+        document.getElementById('dhDetected').innerText = data.triggering_keys.join(' + ');
+        document.getElementById('dhScore').innerText = `${data.risk_score.toFixed(1)} / 100`;
+        
+        // Reset forms
+        document.getElementById('btnShowCancelForm').style.display = 'block';
+        document.getElementById('cancelForm').classList.remove('active');
+        document.getElementById('cancelPin').value = '';
+        document.getElementById('cancelReason').value = '';
+        
+        // Show modal
+        document.getElementById('deadHandModal').classList.add('active');
+        
+        // Start countdown loop
+        clearInterval(alarmTimerInterval);
+        alarmTimerInterval = setInterval(updateCountdown, 100);
+        updateCountdown();
+    }
+
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = alarmDeadline - now;
+        
+        if (distance <= 0) {
+            clearInterval(alarmTimerInterval);
+            document.getElementById('countdownTimer').innerText = "00:00";
+            document.getElementById('countdownTimer').style.color = "var(--danger)";
+            document.getElementById('deadHandModal').classList.remove('active');
+            
+            // Note: Server escalates automatically. 
+            // We just hide the modal after expiration.
+            // A toast or redirect to incident page could happen here.
+            alert("ALARM ESCALATED! Emergency contacts notified.");
+            return;
+        }
+        
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        const ms = Math.floor((distance % 1000) / 10);
+        
+        const secStr = seconds < 10 ? "0" + seconds : seconds;
+        // const msStr = ms < 10 ? "0" + ms : ms;
+        
+        document.getElementById('countdownTimer').innerText = `00:${secStr}`;
+    }
+
+    // Cancel Interactions
+    document.getElementById('btnShowCancelForm').addEventListener('click', () => {
+        document.getElementById('btnShowCancelForm').style.display = 'none';
+        document.getElementById('cancelForm').classList.add('active');
+    });
+
+    document.getElementById('btnSubmitCancel').addEventListener('click', () => {
+        const pin = document.getElementById('cancelPin').value;
+        const reason = document.getElementById('cancelReason').value;
+        
+        if(!pin || !reason) {
+            alert("Please provide PIN and reason.");
+            return;
+        }
+        
+        // POST to cancel API
+        fetch(`/alarms/api/${currentAlarmId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ pin: pin, reason: reason })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                clearInterval(alarmTimerInterval);
+                document.getElementById('deadHandModal').classList.remove('active');
+                alert("Alarm successfully cancelled.");
+            } else {
+                alert("Cancellation failed: " + data.error);
+            }
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
