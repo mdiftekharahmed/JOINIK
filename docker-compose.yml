@@ -8,6 +8,8 @@ services:
       - ./web:/app
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - ./web/.env
     depends_on:
@@ -18,6 +20,8 @@ services:
     command: celery -A config worker -l info
     volumes:
       - ./web:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - ./web/.env
     depends_on:
