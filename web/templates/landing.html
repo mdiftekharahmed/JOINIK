@@ -236,29 +236,37 @@
     </div>
 
     <script>
-        const themeToggleBtn = document.getElementById('themeToggleBtn');
-        const themeIcon = document.getElementById('themeIcon');
-        
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            if (theme === 'dark') {
-                themeIcon.classList.remove('bi-moon-fill');
-                themeIcon.classList.add('bi-sun-fill'); // Show sun in dark mode
-            } else {
-                themeIcon.classList.remove('bi-sun-fill');
-                themeIcon.classList.add('bi-moon-fill'); // Show moon in light mode
+        (function() {
+            const btn = document.getElementById('themeToggleBtn');
+            const icon = document.getElementById('themeIcon');
+            const defaultTheme = 'light'; // landing.html default
+
+            function safeGet() {
+                try { return localStorage.getItem('theme') || defaultTheme; } 
+                catch (e) { return document.documentElement.getAttribute('data-theme') || defaultTheme; }
             }
-        }
-        
-        // Initialize
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        applyTheme(savedTheme);
-        
-        themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-        });
+            
+            function safeSet(theme) {
+                try { localStorage.setItem('theme', theme); } catch (e) {}
+            }
+
+            function apply(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                safeSet(theme);
+                if (theme === 'dark') {
+                    icon.classList.remove('bi-moon-fill');
+                    icon.classList.add('bi-sun-fill');
+                } else {
+                    icon.classList.remove('bi-sun-fill');
+                    icon.classList.add('bi-moon-fill');
+                }
+            }
+
+            apply(safeGet());
+            btn.addEventListener('click', () => {
+                apply(safeGet() === 'dark' ? 'light' : 'dark');
+            });
+        })();
     </script>
 </body>
 </html>

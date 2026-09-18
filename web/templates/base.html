@@ -796,29 +796,37 @@ updateClock();
 setInterval(updateClock, 1000);
 
 /* ── Theme Toggle ── */
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-const themeIcon = document.getElementById('themeIcon');
+(function() {
+    const btn = document.getElementById('themeToggleBtn');
+    const icon = document.getElementById('themeIcon');
+    const defaultTheme = 'dark'; // base.html default
 
-function applyTheme(theme) {
-    if (theme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        themeIcon.classList.remove('bi-sun-fill');
-        themeIcon.classList.add('bi-moon-fill'); // Show moon in light mode
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        themeIcon.classList.remove('bi-moon-fill');
-        themeIcon.classList.add('bi-sun-fill'); // Show sun in dark mode
+    function safeGet() {
+        try { return localStorage.getItem('theme') || defaultTheme; } 
+        catch (e) { return document.documentElement.getAttribute('data-theme') || defaultTheme; }
     }
-    localStorage.setItem('theme', theme);
-}
+    
+    function safeSet(theme) {
+        try { localStorage.setItem('theme', theme); } catch (e) {}
+    }
 
-const savedTheme = localStorage.getItem('theme') || 'dark';
-applyTheme(savedTheme);
+    function apply(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        safeSet(theme);
+        if (theme === 'dark') {
+            icon.classList.remove('bi-moon-fill');
+            icon.classList.add('bi-sun-fill');
+        } else {
+            icon.classList.remove('bi-sun-fill');
+            icon.classList.add('bi-moon-fill');
+        }
+    }
 
-themeToggleBtn.addEventListener('click', () => {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-});
+    apply(safeGet());
+    btn.addEventListener('click', () => {
+        apply(safeGet() === 'dark' ? 'light' : 'dark');
+    });
+})();
 {% include 'alarms/countdown_modal.html' %}
 {% block extra_js %}{% endblock %}
 </body>
