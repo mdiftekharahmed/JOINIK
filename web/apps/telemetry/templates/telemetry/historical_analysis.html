@@ -20,6 +20,9 @@
         <p class="page-subtitle">Device: {{ device.name }} | 10-Second Tumbling Windows</p>
     </div>
     <div class="header-actions" style="display: flex; gap: 12px; align-items: center;">
+        <a href="{% url 'analysis_export_csv' device.tb_device_id %}" class="btn-joinik" style="background: #16a34a;" id="exportCsvBtn">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Export Report CSV
+        </a>
         <form method="POST" action="{% url 'telemetry_historical_analysis' device.tb_device_id %}" style="margin: 0;">
             {% csrf_token %}
             <button type="submit" name="save_to_db" value="true" class="btn-joinik">
