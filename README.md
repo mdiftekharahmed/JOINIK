@@ -73,9 +73,25 @@ JOINIK_MODULE_01_TB_ID=<device_uuid_from_thingsboard>
 
 ## Installation & Deployment
 
-Follow these steps to deploy the JOINIK platform:
+You can deploy the JOINIK platform automatically using the provided one-liner installation script, or manually step-by-step.
 
-### 1. Clone the Repository
+### Option 1: Automated One-Liner Installation (Recommended)
+
+Run the following command on your target Virtual Machine (e.g., Ubuntu/Debian). This script will automatically install Docker/Docker Compose (if missing), clone the repository, prompt you for the necessary database/ThingsBoard credentials, configure your `.env` file, and start the application.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mdiftekharahmed/JOINIK/main/install.sh | bash
+```
+
+*(Note: The script might ask for `sudo` privileges during the installation of Docker or Docker Compose).*
+
+---
+
+### Option 2: Manual Installation Roadmap
+
+If you prefer to configure everything manually, follow this roadmap:
+
+#### 1. Clone the Repository
 
 Clone the project onto your target Virtual Machine or host environment:
 
@@ -84,32 +100,37 @@ git clone https://github.com/mdiftekharahmed/JOINIK.git
 cd JOINIK
 ```
 
-### 2. Configure your Environment
+#### 2. Configure your Environment
 
-Make sure you have populated the `web/.env` file with your credentials as described in the Configuration section above.
+Copy the `.env` template below or from the Configuration section above into `web/.env`, and populate it with your specific credentials:
 
-### 3. Build and Start the Docker Containers
+```bash
+# Example: Using nano to create the file
+nano web/.env
+```
 
-The provided `docker-compose.yml` file builds the Django web application and the Celery worker, linking them to a local Redis instance (if configured to use it).
+#### 3. Build and Start the Docker Containers
+
+The provided `docker-compose.yml` file builds the Django web application and the Celery worker, linking them to the internal Redis container.
 
 Run the following command to build the images and start the services in detached mode:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
-### 4. First-time Setup (Migrations & Superuser)
+#### 4. First-time Setup (Migrations & Superuser)
 
-If this is the first time you are deploying the application, you must apply the database migrations and create an admin user to access the dashboard.
+If this is the first time you are deploying the application, apply the database migrations:
 
-Apply migrations:
 ```bash
-docker-compose exec web python manage.py migrate
+docker compose exec web python manage.py migrate
 ```
 
-Create a superuser account:
+Finally, create an admin user to access the dashboard:
+
 ```bash
-docker-compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
 *(Follow the prompts to enter an email, username, and password).*
 
