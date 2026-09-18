@@ -74,8 +74,12 @@ def device_detail(request, device_id):
     from apps.core.weather import get_current_weather
     weather_data = get_current_weather(device.weather_location)
     
-    from apps.ai_engine.models import AnalysisResult
-    latest_analysis = AnalysisResult.objects.using('analysis_db').filter(device_id=device.id).order_by('-ts').first()
+    latest_analysis = None
+    try:
+        from apps.ai_engine.models import AnalysisResult
+        latest_analysis = AnalysisResult.objects.using('analysis_db').filter(device_id=device.id).order_by('-ts').first()
+    except Exception:
+        pass  # analysis_db may not be migrated yet
     
     context = {
         'device': device,
