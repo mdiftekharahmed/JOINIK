@@ -145,8 +145,8 @@ def telemetry_historical_analysis(request, device_id):
     if request.method == 'POST' and request.POST.get('save_to_db') == 'true':
         saved_count = 0
         for res in results:
-            AnalysisResult.objects.get_or_create(
-                device=device,
+            AnalysisResult.objects.using('analysis_db').get_or_create(
+                device_id=device.id,
                 ts=res['raw_ts'],
                 defaults={
                     'alarm': res.get('alarm', False),
@@ -178,7 +178,7 @@ def telemetry_historical_analysis(request, device_id):
                 }
             )
             saved_count += 1
-        messages.success(request, f"Saved {saved_count} historical analysis records to the database.")
+        messages.success(request, f"Saved {saved_count} historical analysis records to the analysis database.")
             
     # Reverse so newest is first
     results.reverse()
