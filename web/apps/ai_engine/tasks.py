@@ -8,7 +8,7 @@ from apps.core.tb_reader import get_latest_telemetry, get_telemetry_range
 from apps.ai_engine.analyzer import analyze_telemetry_window
 from apps.ai_engine.weather import get_cached_weather
 from apps.alarms.models import Alarm
-from .models import RiskAssessment, AIModelVersion
+from .models import RiskAssessment, AIModelVersion, AnalysisResult
 from django.utils import timezone
 import joblib
 import numpy as np
@@ -126,8 +126,29 @@ def process_telemetry_and_risk():
                 'data': serializable_latest
             }
         )
+        # --- 2. Save AnalysisResult Ledger ---
+        try:
+            AnalysisResult.objects.create(
+                device=device,
+                ts=max_ts,
+                alarm=analysis.get('alarm', False),
+                risk_level=analysis.get('risk_level', 'NORMAL'),
+                risk_score=analysis.get('risk_score', 0.0),
+                event_type=analysis.get('event_type', 'NORMAL'),
+                vibration_mean=analysis.get('vibration_mean', 0.0),
+                vibration_max=analysis.get('vibration_max', 0.0),
+                vibration_min=analysis.get('vibration_min', 0.0),
+                persistence_ratio=analysis.get('persistence_ratio', 0.0),
+                motion_ratio=analysis.get('motion_ratio', 0.0),
+                abnormal_samples=analysis.get('abnormal_samples', 0),
+                total_samples=analysis.get('total_samples', 0),
+                accel_magnitude=analysis.get('accel_magnitude', 0.0),
+                gyro_magnitude=analysis.get('gyro_magnitude', 0.0),
+            )
+        except Exception as e:
+            logger.error(f"Failed to save AnalysisResult for {device_id_str}: {e}")
         
-        # --- 2. Extract Security Parameters ---
+        # --- 3. Extract Security Parameters ---
         risk_score = analysis['risk_score']
         risk_level = analysis['risk_level']
         trigger_alarm = analysis['alarm']

@@ -37,3 +37,31 @@ class RiskAssessment(models.Model):
 
     def __str__(self):
         return f"{self.device.name} - {self.risk_score} at {self.ts}"
+
+class AnalysisResult(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='analysis_results')
+    ts = models.DateTimeField(db_index=True)
+    alarm = models.BooleanField(default=False)
+    risk_level = models.CharField(max_length=20)
+    risk_score = models.FloatField(default=0.0)
+    event_type = models.CharField(max_length=50)
+    vibration_mean = models.FloatField(default=0.0)
+    vibration_max = models.FloatField(default=0.0)
+    vibration_min = models.FloatField(default=0.0)
+    persistence_ratio = models.FloatField(default=0.0)
+    motion_ratio = models.FloatField(default=0.0)
+    abnormal_samples = models.IntegerField(default=0)
+    total_samples = models.IntegerField(default=0)
+    accel_magnitude = models.FloatField(default=0.0)
+    gyro_magnitude = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-ts']
+        indexes = [
+            models.Index(fields=['device', 'ts']),
+        ]
+
+    def __str__(self):
+        return f"{self.device.name} Analysis at {self.ts}"

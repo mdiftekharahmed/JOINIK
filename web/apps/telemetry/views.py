@@ -87,6 +87,9 @@ from apps.ai_engine.weather import get_cached_weather
 from datetime import datetime, timezone
 from django.contrib.admin.views.decorators import staff_member_required
 
+from apps.ai_engine.models import AnalysisResult
+from django.contrib import messages
+
 @staff_member_required
 def telemetry_historical_analysis(request, device_id):
     device = get_object_or_404(Device, tb_device_id=device_id)
@@ -112,8 +115,9 @@ def telemetry_historical_analysis(request, device_id):
             if row['ts_ms'] - window_start_ms >= WINDOW_SIZE_MS:
                 if current_window:
                     analysis = analyze_telemetry_window(current_window, weather_data)
+                    analysis['raw_ts'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc)
                     analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-                    analysis['end_time'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                    analysis['end_time'] = analysis['raw_ts'].strftime('%Y-%m-%d %H:%M:%S')
                     results.append(analysis)
                 window_start_ms += WINDOW_SIZE_MS
                 current_window = [row]
@@ -123,9 +127,35 @@ def telemetry_historical_analysis(request, device_id):
         # Process the last window
         if current_window:
             analysis = analyze_telemetry_window(current_window, weather_data)
+            analysis['raw_ts'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc)
             analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-            analysis['end_time'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            analysis['end_time'] = analysis['raw_ts'].strftime('%Y-%m-%d %H:%M:%S')
             results.append(analysis)
+            
+    if request.method == 'POST' and request.POST.get('save_to_db') == 'true':
+        saved_count = 0
+        for res in results:
+            AnalysisResult.objects.get_or_create(
+                device=device,
+                ts=res['raw_ts'],
+                defaults={
+                    'alarm': res.get('alarm', False),
+                    'risk_level': res.get('risk_level', 'NORMAL'),
+                    'risk_score': res.get('risk_score', 0.0),
+                    'event_type': res.get('event_type', 'NORMAL'),
+                    'vibration_mean': res.get('vibration_mean', 0.0),
+                    'vibration_max': res.get('vibration_max', 0.0),
+                    'vibration_min': res.get('vibration_min', 0.0),
+                    'persistence_ratio': res.get('persistence_ratio', 0.0),
+                    'motion_ratio': res.get('motion_ratio', 0.0),
+                    'abnormal_samples': res.get('abnormal_samples', 0),
+                    'total_samples': res.get('total_samples', 0),
+                    'accel_magnitude': res.get('accel_magnitude', 0.0),
+                    'gyro_magnitude': res.get('gyro_magnitude', 0.0),
+                }
+            )
+            saved_count += 1
+        messages.success(request, f"Saved {saved_count} historical analysis records to the database.")
             
     # Reverse so newest is first
     results.reverse()

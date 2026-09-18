@@ -4,12 +4,28 @@
 {% block topbar_title %}Historical Analysis{% endblock %}
 
 {% block content %}
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible" style="background-color: var(--card-bg); border-left: 4px solid var(--accent); padding: 1rem; margin-bottom: 1rem;">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="page-header">
     <div class="header-left">
         <h1 class="page-title">Historical AI Analysis</h1>
         <p class="page-subtitle">Device: {{ device.name }} | 10-Second Tumbling Windows</p>
     </div>
     <div class="header-actions">
+        <form method="POST" action="{% url 'telemetry_historical_analysis' device.tb_device_id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" name="save_to_db" value="true" class="btn btn-outline" style="border-color: var(--accent); color: var(--accent);">
+                <i class="bi bi-save"></i> Save Results to Database
+            </button>
+        </form>
         <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn btn-outline">Back to Raw Telemetry</a>
     </div>
 </div>
@@ -27,6 +43,8 @@
                     <th>Persistence Ratio</th>
                     <th>Vib. Mean</th>
                     <th>Vib. Max</th>
+                    <th>Accel Mag.</th>
+                    <th>Gyro Mag.</th>
                     <th>Motion</th>
                     <th>Alarm</th>
                 </tr>
@@ -45,6 +63,8 @@
                     <td>{{ res.persistence_ratio|floatformat:2 }}</td>
                     <td>{{ res.vibration_mean|floatformat:2 }}</td>
                     <td>{{ res.vibration_max|floatformat:1 }}</td>
+                    <td>{{ res.accel_magnitude|floatformat:2 }}</td>
+                    <td>{{ res.gyro_magnitude|floatformat:2 }}</td>
                     <td>{{ res.motion_ratio|floatformat:2 }}</td>
                     <td>
                         {% if res.alarm %}
