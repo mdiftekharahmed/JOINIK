@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Manage AI Models — Admin Panel{% endblock %}
+{% block topbar_title %}Manage AI Models{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>AI Models</h1>
+        <div class="page-subtitle">View AI Model versions.</div>
+    </div>
+</div>
+
+<div class="card-joinik">
+    <div class="card-header-joinik" style="padding-bottom: 16px;">
+        <span class="card-label">Model Versions</span>
+    </div>
+    <div class="table-wrap">
+        <table class="table-joinik">
+            <thead>
+                <tr>
+                    <th>Version Tag</th>
+                    <th>Trained At</th>
+                    <th>Samples</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in models %}
+                <tr>
+                    <td><strong>{{ m.version_tag }}</strong></td>
+                    <td class="mono">{{ m.trained_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ m.training_samples }}</td>
+                    <td>
+                        {% if m.is_active %}
+                            <span class="joinik-badge badge-online">Active</span>
+                        {% else %}
+                            <span class="joinik-badge badge-offline">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">No AI models found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — JOINIK{% endblock %}
+{% block topbar_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <div class="page-subtitle">Manage system users, organizations, and AI models.</div>
+    </div>
+</div>
+
+<div class="grid-stats">
+    <div class="card-joinik">
+        <div class="card-header-joinik">
+            <span class="card-label">Total Users</span>
+        </div>
+        <div class="card-body-joinik">
+            <div class="stat-value">{{ user_count }}</div>
+            <a href="{% url 'admin_users' %}" class="btn-ghost" style="margin-top: 10px; font-size: 0.75rem;">Manage Users</a>
+        </div>
+    </div>
+
+    <div class="card-joinik">
+        <div class="card-header-joinik">
+            <span class="card-label">Organizations</span>
+        </div>
+        <div class="card-body-joinik">
+            <div class="stat-value">{{ org_count }}</div>
+            <a href="{% url 'admin_organizations' %}" class="btn-ghost" style="margin-top: 10px; font-size: 0.75rem;">Manage Orgs</a>
+        </div>
+    </div>
+
+    <div class="card-joinik">
+        <div class="card-header-joinik">
+            <span class="card-label">AI Models</span>
+        </div>
+        <div class="card-body-joinik">
+            <div class="stat-value">{{ ai_models_count }}</div>
+            <a href="{% url 'admin_ai_model' %}" class="btn-ghost" style="margin-top: 10px; font-size: 0.75rem;">Manage Models</a>
+        </div>
+    </div>
+
+    <div class="card-joinik">
+        <div class="card-header-joinik">
+            <span class="card-label">Audit Logs</span>
+        </div>
+        <div class="card-body-joinik">
+            <div class="stat-value">{{ audit_count }}</div>
+            <a href="{% url 'admin_audit' %}" class="btn-ghost" style="margin-top: 10px; font-size: 0.75rem;">View Logs</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

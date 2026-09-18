@@ -688,7 +688,7 @@
         </a>
 
         <div class="nav-section-label">System</div>
-        <a href="/admin/" class="sidebar-link" target="_blank" rel="noopener">
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}">
             <i class="bi bi-gear-fill"></i> Admin
         </a>
         {% if user.is_authenticated %}

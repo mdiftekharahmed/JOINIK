@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users — Admin Panel{% endblock %}
+{% block topbar_title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Users</h1>
+        <div class="page-subtitle">View and manage system users.</div>
+    </div>
+</div>
+
+<div class="card-joinik">
+    <div class="card-header-joinik" style="padding-bottom: 16px;">
+        <span class="card-label">User Accounts</span>
+    </div>
+    <div class="table-wrap">
+        <table class="table-joinik">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Organization</th>
+                    <th>Date Joined</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_list %}
+                <tr>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        {% if u.profile %}
+                            <span class="joinik-badge badge-normal">{{ u.profile.get_role_display }}</span>
+                        {% else %}
+                            <span class="joinik-badge badge-low">No Profile</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.profile and u.profile.organization %}
+                            {{ u.profile.organization.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="mono">{{ u.date_joined|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if u.is_active %}
+                            <i class="bi bi-check-circle-fill" style="color: var(--success);"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill" style="color: var(--danger);"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
