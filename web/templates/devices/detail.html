@@ -144,12 +144,12 @@
             </div>
             <div class="risk-ring-wrap">
                 <div class="risk-score-number" id="riskScoreValue">
-                    {{ device.current_risk_score|floatformat:1 }}
+                    {{ ai_snapshot.risk_score|floatformat:1 }}
                 </div>
-                <span class="joinik-badge badge-{{ device.current_risk_level|lower|default:'normal' }}"
+                <span class="joinik-badge badge-{{ ai_snapshot.risk_level|lower }}"
                       id="riskLevelBadge"
                       style="font-size: 0.8rem; padding: 5px 16px;">
-                    {{ device.current_risk_level|default:"NORMAL" }}
+                    {{ ai_snapshot.risk_level }}
                 </span>
                 <span class="risk-score-label">updated live</span>
             </div>
@@ -159,21 +159,19 @@
                 <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">AI-Generated Parameters</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div style="color: var(--text-secondary);">Alarm:</div>
-                    <div id="aiParamAlarm" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.alarm|yesno:"True,False"|default:"False" }}</div>
+                    <div id="aiParamAlarm" style="font-weight: 600; color: {% if ai_snapshot.alarm %}var(--danger){% else %}var(--text-primary){% endif %}; text-align: right;">{{ ai_snapshot.alarm|yesno:"True,False" }}</div>
                     
                     <div style="color: var(--text-secondary);">Risk Level:</div>
-                    <div id="aiParamLevel" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.risk_level|default:"NORMAL" }}</div>
+                    <div id="aiParamLevel" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ ai_snapshot.risk_level }}</div>
                     
                     <div style="color: var(--text-secondary);">Risk Score:</div>
-                    <div id="aiParamScore" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.risk_score|floatformat:1|default:"0.0" }}</div>
+                    <div id="aiParamScore" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ ai_snapshot.risk_score|floatformat:1 }}</div>
                     
                     <div style="color: var(--text-secondary);">Confidence:</div>
-                    <div id="aiParamConf" style="font-weight: 600; color: var(--text-primary); text-align: right;">
-                        {% if latest_analysis %}{{ latest_analysis.confidence|default:1.0|floatformat:2 }}%{% else %}95.0%{% endif %}
-                    </div>
+                    <div id="aiParamConf" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ ai_snapshot.confidence }}%</div>
                 </div>
-                <div style="margin-top: 8px; color: var(--text-secondary);">
-                    Reason: <span id="aiParamReason" style="font-weight: 600; color: var(--text-primary);">{{ latest_analysis.alarm_reason|default:"N/A" }}</span>
+                <div style="margin-top: 8px; color: var(--text-secondary); font-size: 0.78rem;">
+                    Reason: <span id="aiParamReason" style="font-weight: 600; color: var(--text-primary);">{{ ai_snapshot.reason }}</span>
                 </div>
             </div>
             

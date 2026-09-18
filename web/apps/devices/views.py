@@ -68,18 +68,45 @@ def device_detail(request, device_id):
     online = get_device_online(str(device.tb_device_id))
     last_seen = get_last_activity(str(device.tb_device_id))
     
-    # We will get alarms and assessments later, keep it simple for now
     alarms = device.alarms.all().order_by('-triggered_at')[:5]
     
     from apps.core.weather import get_current_weather
     weather_data = get_current_weather(device.weather_location)
     
+    # ── Auto-populate MAC from ThingsBoard live telemetry ─────────────────────
+    live_mac = None
+    if 'device_mac' in latest:
+        live_mac = latest['device_mac'].get('value', '')
+    if live_mac and device.mac_address != live_mac:
+        Device.objects.filter(pk=device.pk).update(mac_address=live_mac)
+        device.mac_address = live_mac
+    
+    # ── Latest AI analysis result from analysis_db ────────────────────────────
     latest_analysis = None
     try:
         from apps.ai_engine.models import AnalysisResult
         latest_analysis = AnalysisResult.objects.using('analysis_db').filter(device_id=device.id).order_by('-ts').first()
     except Exception:
         pass  # analysis_db may not be migrated yet
+
+    # ── Build a unified AI snapshot (analysis_db > device model > zeros) ──────
+    if latest_analysis:
+        ai_snapshot = {
+            'alarm':      latest_analysis.alarm,
+            'risk_level': latest_analysis.risk_level,
+            'risk_score': latest_analysis.risk_score,
+            'confidence': round(latest_analysis.confidence * 100, 1) if latest_analysis.confidence <= 1.0 else round(latest_analysis.confidence, 1),
+            'reason':     latest_analysis.alarm_reason or 'All parameters within normal range',
+        }
+    else:
+        # Fallback to device model fields written by tasks.py
+        ai_snapshot = {
+            'alarm':      False,
+            'risk_level': device.current_risk_level or 'NORMAL',
+            'risk_score': device.current_risk_score or 0.0,
+            'confidence': 95.0,
+            'reason':     'No analysis data yet',
+        }
     
     context = {
         'device': device,
@@ -89,5 +116,6 @@ def device_detail(request, device_id):
         'alarms': alarms,
         'weather_data': weather_data,
         'latest_analysis': latest_analysis,
+        'ai_snapshot': ai_snapshot,
     }
     return render(request, 'devices/detail.html', context)
