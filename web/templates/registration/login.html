@@ -1,112 +1,94 @@
-{% extends 'base.html' %}
-{% block title %}Welcome Back — JOINIK{% endblock %}
-{% block topbar_title %}Authentication{% endblock %}
-
-{% block extra_head %}
-<style>
-    .auth-container {
-        max-width: 400px;
-        margin: 40px auto;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 32px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    }
-    .auth-header {
-        text-align: center;
-        margin-bottom: 24px;
-    }
-    .auth-header h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--text-primary);
-    }
-    .auth-header p {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
-    .form-group {
-        margin-bottom: 16px;
-    }
-    .form-label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 6px;
-    }
-    .form-input {
-        width: 100%;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 10px 14px;
-        color: var(--text-primary);
-        font-size: 0.875rem;
-        font-family: 'Inter', sans-serif;
-        transition: border-color var(--transition);
-        outline: none;
-        box-sizing: border-box;
-    }
-    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-    .auth-btn {
-        width: 100%;
-        padding: 12px;
-        margin-top: 8px;
-        font-size: 0.95rem;
-        justify-content: center;
-    }
-    .auth-links {
-        margin-top: 20px;
-        text-align: center;
-        font-size: 0.8rem;
-    }
-    .auth-links a {
-        color: var(--accent);
-        text-decoration: none;
-    }
-    .auth-links a:hover { text-decoration: underline; }
-    .errorlist {
-        color: #ef4444;
-        font-size: 0.75rem;
-        list-style-type: none;
-        padding: 0;
-        margin: 4px 0 0 0;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="auth-container">
-    <div class="auth-header">
-        <h2>Welcome Back</h2>
-        <p>Sign in to access your dashboard.</p>
-    </div>
-    
-    <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-        <div style="color: #ef4444; font-size: 0.8rem; margin-bottom: 12px; text-align: center;">{{ form.non_field_errors }}</div>
-        {% endif %}
-        
-        <div class="form-group">
-            <label class="form-label" for="id_username">Username</label>
-            <input type="text" name="username" id="id_username" class="form-input" required autofocus>
-            {{ form.username.errors }}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In &mdash; JOINIK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        :root{--n900:#05101f;--n800:#091628;--n700:#0d2040;--b500:#1d6fe8;--b400:#3b8ef5;--b300:#60a5fa;--c400:#22d3ee;--s50:#f8fafc;--s200:#e2e8f0;--s400:#94a3b8;--s500:#64748b;--s900:#0f172a;--bg:var(--n900);--bgs:var(--n800);--bgc:var(--n700);--bdr:rgba(29,111,232,.18);--bdrs:rgba(29,111,232,.35);--tx:#e8f0ff;--txm:var(--s400);--ac:var(--b400);--ag:rgba(59,142,245,.3);--r:12px;--rs:8px;--tr:.22s cubic-bezier(.4,0,.2,1)}
+        [data-theme=light]{--bg:var(--s50);--bgs:#fff;--bgc:#f1f5f9;--bdr:var(--s200);--bdrs:#94a3b8;--tx:var(--s900);--txm:var(--s500);--ac:var(--b500);--ag:rgba(29,111,232,.1)}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+        body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(29,111,232,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(29,111,232,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+        .auth-wrap{position:relative;z-index:1;width:100%;max-width:420px}
+        .auth-logo{display:flex;align-items:center;gap:12px;justify-content:center;text-decoration:none;margin-bottom:36px}
+        .alm{width:42px;height:42px;background:linear-gradient(135deg,var(--b400),var(--c400));border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px var(--ag)}
+        .alm svg{width:22px;height:22px}
+        .alt{font-size:1.4rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--tx)}
+        .alt span{background:linear-gradient(135deg,var(--b400),var(--c400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .auth-card{background:var(--bgs);border:1px solid var(--bdrs);border-radius:var(--r);padding:40px;box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 60px var(--ag);position:relative;overflow:hidden}
+        .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--b500),var(--c400))}
+        .auth-hd{margin-bottom:28px}
+        .auth-hd h1{font-size:1.5rem;font-weight:800;margin-bottom:6px}
+        .auth-hd p{font-size:.85rem;color:var(--txm)}
+        .fgroup{margin-bottom:18px}
+        .flabel{display:block;font-size:.75rem;font-weight:600;color:var(--txm);margin-bottom:6px;letter-spacing:.02em}
+        .finput{width:100%;background:var(--bgc);border:1px solid var(--bdr);border-radius:var(--rs);padding:11px 14px;color:var(--tx);font-size:.875rem;font-family:'Inter',sans-serif;transition:border-color var(--tr),box-shadow var(--tr);outline:none}
+        .finput:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ag)}
+        .finput::placeholder{color:var(--txm)}
+        .auth-btn{width:100%;padding:13px;margin-top:8px;background:linear-gradient(135deg,var(--b500),var(--b400));color:#fff;border:none;border-radius:var(--rs);font-weight:700;font-size:.95rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all var(--tr);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px var(--ag)}
+        .auth-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--ag)}
+        .auth-links{margin-top:20px;text-align:center;font-size:.8rem;color:var(--txm)}
+        .auth-links a{color:var(--ac);text-decoration:none;font-weight:600}
+        .auth-links a:hover{text-decoration:underline}
+        .err{color:#f87171;font-size:.75rem;list-style:none;padding:0;margin:4px 0 0}
+        .err-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--rs);padding:10px 14px;font-size:.8rem;color:#f87171;margin-bottom:16px;text-align:center}
+        .auth-footer{text-align:center;margin-top:28px;font-size:.76rem;color:var(--txm)}
+        .auth-footer a{color:var(--txm);text-decoration:none;transition:color var(--tr)}
+        .auth-footer a:hover{color:var(--ac)}
+        .tbtn{position:fixed;top:20px;right:20px;background:var(--bgs);border:1px solid var(--bdr);color:var(--txm);width:36px;height:36px;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all var(--tr);z-index:10}
+        .tbtn:hover{background:var(--ag);color:var(--ac);border-color:var(--ac)}
+    </style>
+</head>
+<body>
+<button class="tbtn" id="themeBtn" aria-label="Toggle theme"><i class="bi bi-sun-fill" id="themeIcon"></i></button>
+<div class="auth-wrap">
+    <a href="{% url 'landing' %}" class="auth-logo">
+        <div class="alm"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5c0 4.4 3 8.5 7 9.5C14 19.5 17 15.4 17 11V6L10 2z" fill="white" fill-opacity=".9"/><circle cx="10" cy="11" r="2.5" fill="#0d2040"/></svg></div>
+        <span class="alt">JOI<span>NIK</span></span>
+    </a>
+    <div class="auth-card">
+        <div class="auth-hd">
+            <h1>Welcome Back</h1>
+            <p>Sign in to access your security dashboard</p>
         </div>
-        <div class="form-group">
-            <label class="form-label" for="id_password">Password</label>
-            <input type="password" name="password" id="id_password" class="form-input" required>
-            {{ form.password.errors }}
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="err-box">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="fgroup">
+                <label class="flabel" for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" class="finput" placeholder="Enter your username" required autofocus>
+                {% if form.username.errors %}<ul class="err">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="fgroup">
+                <label class="flabel" for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="finput" placeholder="Enter your password" required>
+                {% if form.password.errors %}<ul class="err">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <button type="submit" class="auth-btn"><i class="bi bi-box-arrow-in-right"></i> Sign In</button>
+            <input type="hidden" name="next" value="{{ next|default:'/' }}">
+        </form>
+        <div class="auth-links">
+            <a href="{% url 'password_reset' %}">Forgot your password?</a>
+            &nbsp;&bull;&nbsp;
+            <a href="{% url 'register' %}">Create an account</a>
         </div>
-        <button type="submit" class="btn-joinik auth-btn">Sign In</button>
-        <input type="hidden" name="next" value="{{ next|default:'/' }}" />
-    </form>
-    <div class="auth-links">
-        <a href="{% url 'password_reset' %}">Forgot your password?</a>
     </div>
-
+    <div class="auth-footer">
+        <a href="{% url 'landing' %}"><i class="bi bi-arrow-left"></i> Back to Home</a>
+    </div>
 </div>
-{% endblock %}
+<script>
+(function(){
+    const btn=document.getElementById('themeBtn'),icon=document.getElementById('themeIcon'),html=document.documentElement;
+    function gt(){try{return localStorage.getItem('joinik-theme')||'dark'}catch(e){return'dark'}}
+    function st(t){html.setAttribute('data-theme',t);try{localStorage.setItem('joinik-theme',t)}catch(e){}icon.className=t==='dark'?'bi bi-sun-fill':'bi bi-moon-fill'}
+    st(gt());btn.addEventListener('click',()=>st(gt()==='dark'?'light':'dark'));
+})();
+</script>
+</body>
+</html>

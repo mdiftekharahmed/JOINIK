@@ -1,276 +1,447 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to JOINIK</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <title>JOINIK &mdash; Proactive IoT Intrusion Prevention System</title>
+    <meta name="description" content="JOINIK detects intrusion attempts before physical entry using multi-sensor fusion, edge AI, and mesh networking for small and medium retail enterprises.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        :root {
-            /* LIGHT MODE (default) */
-            --bg-base:        #f8fafc;
-            --bg-surface:     #ffffff;
-            --bg-card:        #ffffff;
-            --bg-card-hover:  #f1f5f9;
-            --border:         #e2e8f0;
-            --border-accent:  rgba(37,99,235,0.3);
-            --text-primary:   #0f172a;
-            --text-secondary: #475569;
-            --text-muted:     #64748b;
-            --accent:         #2563eb;
-            --accent-hover:   #1d4ed8;
-            --success:        #10b981;
-            --warning:        #f59e0b;
-            --danger:         #ef4444;
-            --info:           #3b82f6;
-            --radius:         8px;
-            --radius-sm:      6px;
-            --transition:     0.2s ease;
-        }
+        :root{--n950:#020b18;--n900:#05101f;--n800:#091628;--n700:#0d2040;--n600:#0f2d57;--b500:#1d6fe8;--b400:#3b8ef5;--b300:#60a5fa;--c400:#22d3ee;--c300:#67e8f9;--s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s400:#94a3b8;--s500:#64748b;--s600:#475569;--s900:#0f172a;--bg:var(--n900);--bgs:var(--n800);--bgc:var(--n700);--bdr:rgba(29,111,232,.18);--bdrs:rgba(29,111,232,.35);--tx:#e8f0ff;--txm:var(--s400);--ac:var(--b400);--ag:rgba(59,142,245,.3);--ag2:rgba(34,211,238,.15);--r:12px;--rl:20px;--rs:8px;--tr:.22s cubic-bezier(.4,0,.2,1)}
+        [data-theme=light]{--bg:var(--s50);--bgs:#fff;--bgc:#fff;--bdr:var(--s200);--bdrs:var(--s400);--tx:var(--s900);--txm:var(--s500);--ac:var(--b500);--ag:rgba(29,111,232,.12);--ag2:rgba(29,111,232,.06)}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;line-height:1.6}
+        body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(29,111,232,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(29,111,232,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
 
-        [data-theme="dark"] {
-            --bg-base:        #0f1115;
-            --bg-surface:     #16191e;
-            --bg-card:        #1c1f26;
-            --bg-card-hover:  #232730;
-            --border:         #2b303b;
-            --border-accent:  rgba(37,99,235,0.3);
-            --text-primary:   #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted:     #64748b;
-            --accent:         #3b82f6;
-            --accent-hover:   #2563eb;
-        }
+        /* NAVBAR */
+        .navbar{position:fixed;top:0;left:0;right:0;height:68px;background:rgba(5,16,31,.88);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 40px;z-index:1000;transition:background var(--tr)}
+        [data-theme=light] .navbar{background:rgba(248,250,252,.92)}
+        .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+        .nlm{width:36px;height:36px;background:linear-gradient(135deg,var(--b400),var(--c400));border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px var(--ag)}
+        .nlm svg{width:20px;height:20px}
+        .nlt{font-size:1.25rem;font-weight:900;letter-spacing:2px;color:var(--tx);text-transform:uppercase}
+        .nlt span{background:linear-gradient(135deg,var(--b400),var(--c400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav-links{display:flex;align-items:center;gap:8px;list-style:none}
+        .nav-links a{color:var(--txm);text-decoration:none;font-size:.875rem;font-weight:500;padding:6px 14px;border-radius:var(--rs);transition:color var(--tr),background var(--tr)}
+        .nav-links a:hover{color:var(--tx);background:var(--ag)}
+        .nav-actions{display:flex;align-items:center;gap:10px}
+        .btn-g{background:transparent;color:var(--tx);border:1px solid var(--bdrs);padding:8px 20px;border-radius:var(--rs);font-weight:600;font-size:.875rem;cursor:pointer;text-decoration:none;transition:all var(--tr);font-family:'Inter',sans-serif}
+        .btn-g:hover{background:var(--ag);border-color:var(--ac);color:var(--ac)}
+        .btn-p{background:linear-gradient(135deg,var(--b500),var(--b400));color:#fff;border:none;padding:8px 20px;border-radius:var(--rs);font-weight:600;font-size:.875rem;cursor:pointer;text-decoration:none;transition:all var(--tr);font-family:'Inter',sans-serif;box-shadow:0 4px 16px var(--ag)}
+        .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--ag)}
+        .tbtn{background:none;border:1px solid var(--bdr);color:var(--txm);width:36px;height:36px;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all var(--tr)}
+        .tbtn:hover{background:var(--ag);color:var(--ac);border-color:var(--ac)}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-base);
-            color: var(--text-primary);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        /* HERO */
+        .hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:100px 40px 60px;overflow:hidden;z-index:1}
+        .hg1{position:absolute;top:20%;right:-5%;width:700px;height:700px;background:radial-gradient(circle,rgba(59,142,245,.12) 0%,transparent 70%);pointer-events:none}
+        .hg2{position:absolute;bottom:-10%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(34,211,238,.08) 0%,transparent 70%);pointer-events:none}
+        .hero-inner{max-width:1280px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,142,245,.1);border:1px solid rgba(59,142,245,.25);border-radius:99px;padding:6px 14px;font-size:.75rem;font-weight:600;color:var(--b300);letter-spacing:.05em;text-transform:uppercase;margin-bottom:24px}
+        .bdot{width:6px;height:6px;border-radius:50%;background:var(--c400);animation:pdot 2s infinite}
+        @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+        .hero-title{font-size:clamp(2.4rem,4vw,3.6rem);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:24px}
+        .la{background:linear-gradient(135deg,var(--b400) 0%,var(--c400) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:block}
+        .hero-sub{font-size:1.1rem;color:var(--txm);line-height:1.7;margin-bottom:40px;max-width:520px}
+        .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:56px}
+        .btn-hp{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--b500),var(--b400));color:#fff;border:none;padding:14px 28px;border-radius:var(--rs);font-weight:700;font-size:.95rem;cursor:pointer;text-decoration:none;transition:all var(--tr);box-shadow:0 6px 24px var(--ag);font-family:'Inter',sans-serif}
+        .btn-hp:hover{transform:translateY(-2px);box-shadow:0 10px 32px var(--ag)}
+        .btn-ho{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--tx);border:1px solid var(--bdrs);padding:14px 28px;border-radius:var(--rs);font-weight:600;font-size:.95rem;cursor:pointer;text-decoration:none;transition:all var(--tr);font-family:'Inter',sans-serif}
+        .btn-ho:hover{background:var(--ag);border-color:var(--ac);color:var(--ac)}
+        .hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+        .hs{display:flex;flex-direction:column;gap:2px}
+        .hsv{font-family:'JetBrains Mono',monospace;font-size:1.75rem;font-weight:700;background:linear-gradient(135deg,var(--b300),var(--c400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hsl{font-size:.75rem;color:var(--txm);text-transform:uppercase;letter-spacing:.06em}
+        .hsd{width:1px;background:var(--bdr);align-self:stretch}
+        .hero-img{position:relative}
+        .hero-frame{position:relative;border-radius:var(--rl);overflow:hidden;border:1px solid var(--bdrs);box-shadow:0 0 0 1px rgba(59,142,245,.1),0 40px 80px rgba(0,0,0,.5),0 0 60px rgba(59,142,245,.1)}
+        .hero-frame img{width:100%;display:block}
+        .hibadge{position:absolute;bottom:-20px;left:30px;background:linear-gradient(135deg,var(--n700),var(--n800));border:1px solid var(--bdrs);border-radius:var(--r);padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 20px 40px rgba(0,0,0,.4);backdrop-filter:blur(12px)}
+        [data-theme=light] .hibadge{background:linear-gradient(135deg,#fff,#f8fafc)}
+        .hbi{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(29,111,232,.2),rgba(34,211,238,.1));border:1px solid rgba(59,142,245,.3);display:flex;align-items:center;justify-content:center;color:var(--c400);font-size:1.1rem}
+        .hbt strong{display:block;font-size:.8rem;font-weight:700;color:var(--tx)}
+        .hbt span{font-size:.7rem;color:var(--txm)}
 
-        .topbar {
-            height: 64px;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
+        /* SECTIONS */
+        section{position:relative;z-index:1}
+        .container{max-width:1280px;margin:0 auto;padding:0 40px}
+        .slabel{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--b400);margin-bottom:14px}
+        .slabel::before{content:'';display:block;width:24px;height:2px;background:var(--b400);border-radius:2px}
+        .stitle{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:16px}
+        .stitle span{background:linear-gradient(135deg,var(--b400),var(--c400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .ssub{font-size:1.05rem;color:var(--txm);max-width:560px;line-height:1.7}
+        .sdiv{height:1px;background:linear-gradient(90deg,transparent,var(--bdrs),transparent)}
 
-        .topbar-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* PROBLEM */
+        .prob-sec{padding:120px 0 80px}
+        .prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:60px}
+        .plist{display:flex;flex-direction:column;gap:24px}
+        .pitem{display:flex;gap:16px;padding:20px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.12);border-radius:var(--r);transition:border-color var(--tr),background var(--tr)}
+        .pitem:hover{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}
+        .picon{width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;color:#f87171;font-size:1rem;flex-shrink:0}
+        .pitem h4{font-size:.9rem;font-weight:700;margin-bottom:4px;color:#f87171}
+        .pitem p{font-size:.82rem;color:var(--txm);line-height:1.6;margin:0}
+        .sol-panel{background:linear-gradient(135deg,rgba(29,111,232,.08),rgba(34,211,238,.04));border:1px solid var(--bdrs);border-radius:var(--rl);padding:40px;position:relative;overflow:hidden}
+        .sol-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--b400),var(--c400))}
+        .sol-panel h3{font-size:1.4rem;font-weight:800;margin-bottom:16px;background:linear-gradient(135deg,var(--b300),var(--c400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sol-panel p{font-size:.9rem;color:var(--txm);line-height:1.75}
+        .sdivr{height:1px;background:var(--bdr);margin:24px 0}
+        .spts{display:flex;flex-direction:column;gap:12px}
+        .spt{display:flex;align-items:flex-start;gap:10px;font-size:.85rem;color:var(--txm)}
+        .spt i{color:var(--c400);font-size:.9rem;margin-top:2px;flex-shrink:0}
 
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+        /* FEATURES */
+        .feat-sec{padding:100px 0}
+        .feat-hd{text-align:center;margin-bottom:64px}
+        .feat-hd .slabel{justify-content:center}
+        .feat-hd .slabel::before{display:none}
+        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+        .fcard{background:var(--bgs);border:1px solid var(--bdr);border-radius:var(--rl);padding:32px;position:relative;overflow:hidden;transition:all var(--tr);cursor:default}
+        .fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ac),transparent);opacity:0;transition:opacity var(--tr)}
+        .fcard:hover{border-color:var(--bdrs);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.2),0 0 40px var(--ag)}
+        .fcard:hover::before{opacity:1}
+        .ficon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:20px}
+        .fi-bl{background:rgba(29,111,232,.12);color:var(--b400);border:1px solid rgba(29,111,232,.2)}
+        .fi-cy{background:rgba(34,211,238,.1);color:var(--c400);border:1px solid rgba(34,211,238,.2)}
+        .fi-vi{background:rgba(139,92,246,.1);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+        .fi-am{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+        .fi-em{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+        .fi-ro{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.2)}
+        .fcard h3{font-size:1rem;font-weight:700;margin-bottom:10px;color:var(--tx)}
+        .fcard p{font-size:.84rem;color:var(--txm);line-height:1.65;margin:0}
 
-        .btn-joinik {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background var(--transition);
-        }
+        /* HOW */
+        .how-sec{padding:100px 0;background:linear-gradient(180deg,transparent,rgba(29,111,232,.03),transparent)}
+        .how-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:60px}
+        .steps{display:flex;flex-direction:column}
+        .step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--bdr)}
+        .step:last-child{border-bottom:none}
+        .snum{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;color:var(--b400);background:rgba(29,111,232,.1);border:1px solid rgba(29,111,232,.2);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .step h4{font-size:.95rem;font-weight:700;margin-bottom:6px}
+        .step p{font-size:.82rem;color:var(--txm);line-height:1.6;margin:0}
+        .dprev{background:var(--bgs);border:1px solid var(--bdrs);border-radius:var(--rl);overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 60px var(--ag)}
+        .ptopbar{background:var(--bgc);border-bottom:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:8px}
+        .pdot{width:10px;height:10px;border-radius:50%}
+        .purl{flex:1;background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:4px 12px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--txm)}
+        .pbody{padding:20px;display:flex;flex-direction:column;gap:12px}
+        .prow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+        .pmet{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;padding:14px}
+        .pml{font-size:.6rem;color:var(--txm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+        .pmv{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700}
+        .vg{color:#34d399}.vb{color:var(--b400)}.va{color:#fbbf24}.vr{color:#f87171}
+        .pchart{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;padding:14px;height:80px;position:relative;overflow:hidden}
+        .pcl{font-size:.6rem;color:var(--txm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+        .cbars{display:flex;align-items:flex-end;gap:3px;height:40px}
+        .cbar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--b400),rgba(59,142,245,.3));transition:height 1s ease}
+        .pst{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;font-size:.72rem}
+        .sind{display:flex;align-items:center;gap:6px;color:var(--txm)}
+        .sdot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.6);animation:blink 2s infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+        .rbadge{padding:3px 10px;border-radius:99px;font-weight:700;font-size:.65rem}
+        .rn{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.2)}
+        .rl2{background:rgba(59,142,245,.12);color:var(--b400);border:1px solid rgba(59,142,245,.2)}
 
-        .btn-joinik:hover {
-            background: var(--accent-hover);
-        }
+        /* ARCH */
+        .arch-sec{padding:100px 0}
+        .arch-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:60px;position:relative}
+        .acard{background:var(--bgs);border:1px solid var(--bdr);border-radius:var(--rl);padding:28px 24px;text-align:center;position:relative;transition:all var(--tr)}
+        .acard:hover{border-color:var(--bdrs);box-shadow:0 0 40px var(--ag)}
+        .aicon{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,rgba(29,111,232,.15),rgba(34,211,238,.08));border:1px solid rgba(29,111,232,.25);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--b400);margin:0 auto 16px}
+        .acard h4{font-size:.9rem;font-weight:700;margin-bottom:8px}
+        .acard p{font-size:.78rem;color:var(--txm);line-height:1.6;margin:0}
+        .aarw{position:absolute;top:50%;right:-28px;transform:translateY(-50%);color:var(--bdrs);font-size:1.2rem;z-index:2}
 
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all var(--transition);
-        }
+        /* RESEARCH */
+        .res-sec{padding:100px 0;background:linear-gradient(180deg,transparent,rgba(29,111,232,.03),transparent)}
+        .res-grid{display:grid;grid-template-columns:3fr 2fr;gap:60px;align-items:start;margin-top:60px}
+        .rcard{background:var(--bgs);border:1px solid var(--bdrs);border-radius:var(--rl);padding:40px;position:relative;overflow:hidden}
+        .rcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--b500),var(--c400))}
+        .rquote{font-size:1.05rem;line-height:1.75;color:var(--txm);margin-bottom:28px;font-style:italic}
+        .resrch{display:flex;align-items:center;gap:14px}
+        .rava{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--b500),var(--c400));display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:#fff;flex-shrink:0}
+        .rname{font-size:.9rem;font-weight:700;margin-bottom:3px}
+        .rrole{font-size:.75rem;color:var(--txm)}
+        .infop{display:flex;flex-direction:column;gap:16px}
+        .iitem{background:var(--bgs);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;display:flex;gap:14px;align-items:flex-start;transition:border-color var(--tr)}
+        .iitem:hover{border-color:var(--bdrs)}
+        .iiicon{width:36px;height:36px;background:rgba(29,111,232,.1);border:1px solid rgba(29,111,232,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--b400);font-size:.9rem;flex-shrink:0}
+        .iitem h5{font-size:.8rem;font-weight:700;margin-bottom:3px;color:var(--tx)}
+        .iitem p{font-size:.75rem;color:var(--txm);margin:0;line-height:1.5}
 
-        .btn-ghost:hover {
-            background: var(--bg-surface);
-            border-color: var(--text-muted);
-        }
+        /* CTA */
+        .cta-sec{padding:100px 0}
+        .cta-ban{background:linear-gradient(135deg,var(--n700),rgba(29,111,232,.2));border:1px solid var(--bdrs);border-radius:var(--rl);padding:72px 60px;text-align:center;position:relative;overflow:hidden}
+        [data-theme=light] .cta-ban{background:linear-gradient(135deg,#e8f0ff,#f0f7ff);border-color:rgba(29,111,232,.2)}
+        .cta-ban::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(59,142,245,.1) 0%,transparent 70%);pointer-events:none}
+        .cta-ban h2{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:900;letter-spacing:-.02em;margin-bottom:16px}
+        .cta-ban p{font-size:1.05rem;color:var(--txm);margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto}
+        .cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: var(--radius-sm);
-            transition: background var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .theme-toggle:hover {
-            background: var(--bg-surface);
-            color: var(--text-primary);
-        }
+        /* FOOTER */
+        footer{position:relative;z-index:1;border-top:1px solid var(--bdr);padding:48px 0 32px}
+        .finner{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:40px}
+        .fbrand p{font-size:.82rem;color:var(--txm);line-height:1.65;margin-top:14px;max-width:320px}
+        .fcol h6{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txm);margin-bottom:14px}
+        .fcol ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+        .fcol ul li a{font-size:.82rem;color:var(--txm);text-decoration:none;transition:color var(--tr)}
+        .fcol ul li a:hover{color:var(--ac)}
+        .fbot{border-top:1px solid var(--bdr);padding-top:28px;display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--txm)}
+        .fbot a{color:var(--ac);text-decoration:none}
 
-        .landing-hero {
-            text-align: center;
-            padding: 80px 20px;
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            margin: 60px auto 40px auto;
-            max-width: 800px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-            border: 1px solid var(--border);
-        }
-        .landing-hero h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .landing-hero p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-        .landing-cta {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
-            max-width: 1000px;
-            margin: 0 auto 60px auto;
-            padding: 0 20px;
-        }
-        .feature-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            text-align: center;
-            transition: transform var(--transition);
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        .feature-card i {
-            font-size: 2.5rem;
-            color: var(--accent);
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-        .feature-card h3 {
-            font-size: 1.2rem;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-            margin-top: 0;
-        }
-        .feature-card p {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin: 0;
-        }
+        /* ANIM */
+        .fade-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+        .fade-up.visible{opacity:1;transform:translateY(0)}
+
+        @media(max-width:1024px){.hero-inner,.prob-grid,.how-grid,.res-grid{grid-template-columns:1fr}.hero-img{display:none}.feat-grid{grid-template-columns:repeat(2,1fr)}.arch-grid{grid-template-columns:repeat(2,1fr)}.aarw{display:none}.finner{grid-template-columns:1fr 1fr}}
+        @media(max-width:640px){.navbar,.container{padding:0 20px}.hero{padding:90px 20px 50px}.hero-stats{gap:20px}.feat-grid,.arch-grid{grid-template-columns:1fr}.cta-ban{padding:48px 24px}.nav-links{display:none}.finner{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
-    <header class="topbar">
-        <div class="topbar-title">JOINIK</div>
-        <div class="topbar-right">
-            <a href="{% url 'login' %}" class="btn-ghost">Login</a>
-            <a href="{% url 'register' %}" class="btn-joinik">Register</a>
-            <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme">
-                <i class="bi bi-sun-fill" id="themeIcon"></i>
-            </button>
-        </div>
-    </header>
 
-    <div class="landing-hero">
-        <h1>Next-Gen IoT Security</h1>
-        <p>Monitor, manage, and secure your connected devices with the power of advanced AI anomaly detection and real-time telemetry analytics.</p>
-        <div class="landing-cta">
-            <a href="{% url 'register' %}" class="btn-joinik" style="padding: 14px 28px; font-size: 1.1rem;">Get Started Today</a>
-            <a href="{% url 'login' %}" class="btn-ghost" style="padding: 14px 28px; font-size: 1.1rem;">Sign In</a>
+<nav class="navbar" id="navbar">
+    <a href="{% url 'landing' %}" class="nav-logo">
+        <div class="nlm">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5c0 4.4 3 8.5 7 9.5C14 19.5 17 15.4 17 11V6L10 2z" fill="white" fill-opacity=".9"/><circle cx="10" cy="11" r="2.5" fill="#0d2040"/></svg>
+        </div>
+        <span class="nlt">JOI<span>NIK</span></span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="#problem">Problem</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#research">Research</a></li>
+    </ul>
+    <div class="nav-actions">
+        <button class="tbtn" id="themeBtn" aria-label="Toggle theme"><i class="bi bi-sun-fill" id="themeIcon"></i></button>
+        <a href="{% url 'login' %}" class="btn-g">Sign In</a>
+        <a href="{% url 'register' %}" class="btn-p">Access Dashboard</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hg1"></div><div class="hg2"></div>
+    <div class="hero-inner">
+        <div>
+            <div class="hero-badge"><span class="bdot"></span>Proactive IoT Security Platform</div>
+            <h1 class="hero-title">Stop Intrusions<br><span class="la">Before Entry Occurs</span></h1>
+            <p class="hero-sub">JOINIK detects shutter tampering, drilling, and power sabotage in real time using multi-sensor fusion and edge AI &mdash; alerting owners while the attack is still in progress.</p>
+            <div class="hero-cta">
+                <a href="{% url 'register' %}" class="btn-hp"><i class="bi bi-shield-check"></i> Access Platform</a>
+                <a href="#how-it-works" class="btn-ho"><i class="bi bi-play-circle"></i> See How It Works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hs"><span class="hsv">10s</span><span class="hsl">Analysis Window</span></div>
+                <div class="hsd"></div>
+                <div class="hs"><span class="hsv">6+</span><span class="hsl">Sensor Channels</span></div>
+                <div class="hsd"></div>
+                <div class="hs"><span class="hsv">Pre-breach</span><span class="hsl">Detection Model</span></div>
+            </div>
+        </div>
+        <div class="hero-img">
+            <div class="hero-frame">
+                <img src="{% static 'hero.jpg' %}" alt="JOINIK IoT Security Network" width="600" height="400">
+            </div>
+            <div class="hibadge">
+                <div class="hbi"><i class="bi bi-activity"></i></div>
+                <div class="hbt"><strong>Live Analysis Active</strong><span>10-second tumbling windows</span></div>
+            </div>
         </div>
     </div>
+</section>
 
-    <div class="features-grid">
-        <div class="feature-card">
-            <i class="bi bi-shield-check"></i>
-            <h3>Proactive Threat Detection</h3>
-            <p>Our AI models analyze telemetry in real-time to detect anomalous behavior and instantly raise alarms.</p>
-        </div>
-        <div class="feature-card">
-            <i class="bi bi-cpu"></i>
-            <h3>Unified Device Management</h3>
-            <p>Connect and monitor all your IoT sensors and gateways seamlessly through ThingsBoard integration.</p>
-        </div>
-        <div class="feature-card">
-            <i class="bi bi-bar-chart-line"></i>
-            <h3>Rich Telemetry Analytics</h3>
-            <p>Visualize critical data points with dynamic charts, gauges, and live metric indicators.</p>
+<div class="sdiv"></div>
+
+<section class="prob-sec" id="problem">
+    <div class="container">
+        <div class="slabel">The Problem</div>
+        <h2 class="stitle">Reactive Systems <span>Fail at the Critical Moment</span></h2>
+        <p class="ssub">Traditional retail security only responds after an intrusion has occurred &mdash; by which point damage and loss are already inevitable.</p>
+        <div class="prob-grid fade-up">
+            <div class="plist">
+                <div class="pitem"><div class="picon"><i class="bi bi-camera-video-off"></i></div><div><h4>CCTV Records, Does Not Prevent</h4><p>Cameras document what happens after entry. They do not prevent the break-in and are frequently disabled by cutting power before entry.</p></div></div>
+                <div class="pitem"><div class="picon"><i class="bi bi-exclamation-triangle"></i></div><div><h4>PIR Sensors Trigger After Entry</h4><p>Passive infrared motion sensors only detect presence inside the premises. By the time they fire, physical breach has already succeeded.</p></div></div>
+                <div class="pitem"><div class="picon"><i class="bi bi-lightning-charge"></i></div><div><h4>Single Point of Failure</h4><p>Cutting the power line disables conventional alarm systems entirely, removing all protection at precisely the moment an attack begins.</p></div></div>
+                <div class="pitem"><div class="picon"><i class="bi bi-currency-dollar"></i></div><div><h4>Enterprise Solutions Are Unaffordable</h4><p>Professional pre-breach detection systems are cost-prohibitive for small and medium retail operators who need them most.</p></div></div>
+            </div>
+            <div class="sol-panel">
+                <h3>The JOINIK Approach</h3>
+                <p>JOINIK reverses the detection paradigm. By analyzing vibration frequency signatures, power status, and interior motion simultaneously, the system identifies an attack while it is still in progress &mdash; before the shutter is breached.</p>
+                <div class="sdivr"></div>
+                <div class="spts">
+                    <div class="spt"><i class="bi bi-check-circle-fill"></i><span>Detects drilling, cutting, and hammering via vibration signature analysis</span></div>
+                    <div class="spt"><i class="bi bi-check-circle-fill"></i><span>Treats a grid power cut as a direct threat indicator</span></div>
+                    <div class="spt"><i class="bi bi-check-circle-fill"></i><span>Mesh topology ensures no single node failure disrupts the network</span></div>
+                    <div class="spt"><i class="bi bi-check-circle-fill"></i><span>Battery backup maintains operation when mains power is cut</span></div>
+                    <div class="spt"><i class="bi bi-check-circle-fill"></i><span>Edge-level filtering eliminates false alarms from wind, animals, and traffic</span></div>
+                </div>
+            </div>
         </div>
     </div>
+</section>
 
-    <script>
-        (function() {
-            const btn = document.getElementById('themeToggleBtn');
-            const icon = document.getElementById('themeIcon');
-            const defaultTheme = 'light'; // landing.html default
+<div class="sdiv"></div>
 
-            function safeGet() {
-                try { return localStorage.getItem('theme') || defaultTheme; } 
-                catch (e) { return document.documentElement.getAttribute('data-theme') || defaultTheme; }
-            }
-            
-            function safeSet(theme) {
-                try { localStorage.setItem('theme', theme); } catch (e) {}
-            }
+<section class="feat-sec" id="features">
+    <div class="container">
+        <div class="feat-hd">
+            <div class="slabel">Platform Features</div>
+            <h2 class="stitle">Engineered for <span>Precision Detection</span></h2>
+            <p class="ssub" style="margin:0 auto">Every component of JOINIK is designed around a single objective &mdash; detecting a threat while an attacker can still be stopped.</p>
+        </div>
+        <div class="feat-grid">
+            <div class="fcard fade-up"><div class="ficon fi-bl"><i class="bi bi-shield-shaded"></i></div><h3>Pre-Breach Detection</h3><p>Identifies an attack while it is still in progress. Shutter cutting, drilling, and hammering are classified using multi-sensor vibration analysis before physical entry succeeds.</p></div>
+            <div class="fcard fade-up"><div class="ficon fi-cy"><i class="bi bi-diagram-3"></i></div><h3>Multi-Sensor Fusion</h3><p>Combines vibration, accelerometer, gyroscope, power monitoring, and interior PIR data to produce a single, reliable threat confidence score per 10-second window.</p></div>
+            <div class="fcard fade-up"><div class="ficon fi-vi"><i class="bi bi-broadcast"></i></div><h3>Resilient Mesh Network</h3><p>Distributed ESP-MESH/ESP-NOW topology means no single node failure can disable the system. The network re-routes around any destroyed or offline node automatically.</p></div>
+            <div class="fcard fade-up"><div class="ficon fi-am"><i class="bi bi-battery-charging"></i></div><h3>Power Sabotage Detection</h3><p>A mains power cut is treated as a direct security event. Each node includes battery backup, maintaining full sensor operation when the grid is deliberately disabled.</p></div>
+            <div class="fcard fade-up"><div class="ficon fi-em"><i class="bi bi-cpu"></i></div><h3>Edge AI Signal Processing</h3><p>Threat confidence scoring runs at the gateway edge, not in the cloud. Real-time classification filters wind, traffic, and animal vibrations to eliminate false alarms.</p></div>
+            <div class="fcard fade-up"><div class="ficon fi-ro"><i class="bi bi-bar-chart-steps"></i></div><h3>Cloud Dashboard and Analytics</h3><p>Full telemetry logging, historical session analysis, risk timeline visualization, alarm management, and CSV export for compliance and incident reporting.</p></div>
+        </div>
+    </div>
+</section>
 
-            function apply(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                safeSet(theme);
-                if (theme === 'dark') {
-                    icon.classList.remove('bi-moon-fill');
-                    icon.classList.add('bi-sun-fill');
-                } else {
-                    icon.classList.remove('bi-sun-fill');
-                    icon.classList.add('bi-moon-fill');
-                }
-            }
+<div class="sdiv"></div>
 
-            apply(safeGet());
-            btn.addEventListener('click', () => {
-                apply(safeGet() === 'dark' ? 'light' : 'dark');
-            });
-        })();
-    </script>
+<section class="how-sec" id="how-it-works">
+    <div class="container">
+        <div class="slabel">Detection Pipeline</div>
+        <h2 class="stitle">From Sensor to <span>Alert in Seconds</span></h2>
+        <div class="how-grid">
+            <div class="steps fade-up">
+                <div class="step"><div class="snum">01</div><div><h4>Continuous Sensor Sampling</h4><p>ESP32 nodes sample vibration intensity, 3-axis accelerometer, gyroscope, power status, and CCTV line continuity at high frequency and transmit via the mesh network.</p></div></div>
+                <div class="step"><div class="snum">02</div><div><h4>10-Second Tumbling Window Analysis</h4><p>The edge gateway aggregates incoming telemetry into 10-second non-overlapping windows. Statistical features are extracted: persistence ratio, accel magnitude, gyro magnitude, and motion ratio.</p></div></div>
+                <div class="step"><div class="snum">03</div><div><h4>Rule-Based Multi-Sensor Classification</h4><p>Seven defined threat scenarios from isolated vibration to coordinated multi-sensor events are evaluated against each window. A risk score from 0 to 100 and risk level are assigned.</p></div></div>
+                <div class="step"><div class="snum">04</div><div><h4>Immediate Alert Dispatch</h4><p>When a Medium, High, or Critical risk is detected, alarms are raised, WebSocket push notifications are sent to the dashboard, and SMS and call alerts are dispatched to the owner and emergency contacts.</p></div></div>
+                <div class="step"><div class="snum">05</div><div><h4>Persistent Analysis Storage</h4><p>Every analysis window is stored in a dedicated PostgreSQL database, enabling full audit trail, historical session replay, and compliance reporting.</p></div></div>
+            </div>
+            <div class="dprev fade-up">
+                <div class="ptopbar">
+                    <div class="pdot" style="background:#ef4444"></div>
+                    <div class="pdot" style="background:#f59e0b"></div>
+                    <div class="pdot" style="background:#22c55e"></div>
+                    <div class="purl">joinik.local / devices / JOINIK_IEEE_IU</div>
+                </div>
+                <div class="pbody">
+                    <div class="prow">
+                        <div class="pmet"><div class="pml">AI Risk Score</div><div class="pmv vg">3.2</div></div>
+                        <div class="pmet"><div class="pml">Risk Level</div><div class="pmv vb">NORMAL</div></div>
+                        <div class="pmet"><div class="pml">Confidence</div><div class="pmv vb">98%</div></div>
+                    </div>
+                    <div class="pchart">
+                        <div class="pcl">Vibration Intensity &mdash; 60s</div>
+                        <div class="cbars">
+                            <div class="cbar" style="height:18%"></div>
+                            <div class="cbar" style="height:25%"></div>
+                            <div class="cbar" style="height:20%"></div>
+                            <div class="cbar" style="height:15%"></div>
+                            <div class="cbar" style="height:30%"></div>
+                            <div class="cbar" style="height:22%"></div>
+                            <div class="cbar" style="height:28%"></div>
+                            <div class="cbar" style="height:19%"></div>
+                            <div class="cbar" style="height:35%"></div>
+                            <div class="cbar" style="height:24%"></div>
+                            <div class="cbar" style="height:16%"></div>
+                            <div class="cbar" style="height:20%"></div>
+                        </div>
+                    </div>
+                    <div class="pst"><div class="sind"><div class="sdot"></div><span>Node JOINIK-01 &mdash; Online</span></div><span class="rbadge rn">SECURE</span></div>
+                    <div class="pst"><div class="sind"><i class="bi bi-lightning-charge" style="color:#fbbf24;font-size:.7rem"></i><span>Power Status &mdash; Nominal</span></div><span class="rbadge rl2">MONITORING</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="sdiv"></div>
+
+<section class="arch-sec" id="architecture">
+    <div class="container">
+        <div class="slabel">System Architecture</div>
+        <h2 class="stitle">Four-Layer <span>Security Stack</span></h2>
+        <p class="ssub">A layered architecture from hardware to cloud, with no single point of failure at any layer.</p>
+        <div class="arch-grid fade-up">
+            <div class="acard"><div class="aicon"><i class="bi bi-cpu-fill"></i></div><h4>Sensor Layer</h4><p>ESP32 nodes with vibration sensor, 3-axis IMU, power monitor, and CCTV line sensor. Battery-backed. Tamper-detected.</p><i class="bi bi-chevron-right aarw"></i></div>
+            <div class="acard"><div class="aicon"><i class="bi bi-router-fill"></i></div><h4>Mesh Network</h4><p>ESP-MESH / ESP-NOW resilient topology. Self-healing. Operates independently of internet connectivity.</p><i class="bi bi-chevron-right aarw"></i></div>
+            <div class="acard"><div class="aicon"><i class="bi bi-hdd-network-fill"></i></div><h4>Edge Gateway</h4><p>ThingsBoard IoT platform. Local signal fusion and AI classification. 10-second tumbling window analysis engine.</p><i class="bi bi-chevron-right aarw"></i></div>
+            <div class="acard"><div class="aicon"><i class="bi bi-cloud-fill"></i></div><h4>Cloud Dashboard</h4><p>Django and PostgreSQL with WebSocket real-time dashboard. Alarm management, analytics, and mobile alert dispatch.</p></div>
+        </div>
+    </div>
+</section>
+
+<div class="sdiv"></div>
+
+<section class="res-sec" id="research">
+    <div class="container">
+        <div class="slabel">Academic Foundation</div>
+        <h2 class="stitle">Research-Backed <span>Innovation</span></h2>
+        <div class="res-grid">
+            <div class="rcard fade-up">
+                <p class="rquote">"Traditional retail security systems are reactive &mdash; they alert owners only after an intruder has already breached the premises, by which point loss or damage has occurred. JOINIK reverses this paradigm by detecting an intrusion attempt, such as shutter tampering, drilling, hammering, or intentional power line sabotage, before physical entry succeeds."</p>
+                <div class="resrch">
+                    <div class="rava">IA</div>
+                    <div><div class="rname">Md Iftekhar Ahmed</div><div class="rrole">Department of ICT, Islamic University, Bangladesh</div></div>
+                </div>
+            </div>
+            <div class="infop fade-up">
+                <div class="iitem"><div class="iiicon"><i class="bi bi-building"></i></div><div><h5>Institution</h5><p>Department of Information and Communication Technology, Islamic University, Bangladesh</p></div></div>
+                <div class="iitem"><div class="iiicon"><i class="bi bi-graph-up-arrow"></i></div><div><h5>Development Stage</h5><p>Active prototype with working hardware deployment, cloud integration, and real-time AI classification engine</p></div></div>
+                <div class="iitem"><div class="iiicon"><i class="bi bi-people"></i></div><div><h5>Target Market</h5><p>Small and medium retail enterprises including mobile phone shops, jewelry stores, electronics retailers, and shopping complexes</p></div></div>
+                <div class="iitem"><div class="iiicon"><i class="bi bi-rocket-takeoff"></i></div><div><h5>Commercialization Path</h5><p>SaaS platform with future LoRa mesh networking, TinyML sound classification, and environmental sensor integration</p></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="sdiv"></div>
+
+<section class="cta-sec">
+    <div class="container">
+        <div class="cta-ban fade-up">
+            <h2>Ready to Secure Your Premises?</h2>
+            <p>Access the JOINIK platform to monitor your sensor network, review AI-generated risk reports, and manage security alerts in real time.</p>
+            <div class="cta-btns">
+                <a href="{% url 'register' %}" class="btn-hp"><i class="bi bi-shield-check"></i> Get Started</a>
+                <a href="{% url 'login' %}" class="btn-ho"><i class="bi bi-box-arrow-in-right"></i> Sign In to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="finner">
+            <div class="fbrand">
+                <a href="{% url 'landing' %}" class="nav-logo">
+                    <div class="nlm"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5c0 4.4 3 8.5 7 9.5C14 19.5 17 15.4 17 11V6L10 2z" fill="white" fill-opacity=".9"/><circle cx="10" cy="11" r="2.5" fill="#0d2040"/></svg></div>
+                    <span class="nlt">JOI<span>NIK</span></span>
+                </a>
+                <p>A proactive IoT-based multi-sensor intrusion prevention and early detection system for small-to-medium retail enterprises. Research project, Department of ICT, Islamic University, Bangladesh.</p>
+            </div>
+            <div class="fcol"><h6>Platform</h6><ul><li><a href="{% url 'device_list' %}">Devices</a></li><li><a href="{% url 'login' %}">Dashboard</a></li><li><a href="#features">Features</a></li><li><a href="#how-it-works">How It Works</a></li></ul></div>
+            <div class="fcol"><h6>Account</h6><ul><li><a href="{% url 'login' %}">Sign In</a></li><li><a href="{% url 'register' %}">Register</a></li><li><a href="#research">Research</a></li><li><a href="#architecture">Architecture</a></li></ul></div>
+        </div>
+        <div class="fbot">
+            <span>JOINIK Security Platform &mdash; Department of ICT, Islamic University, Bangladesh</span>
+            <span>Researcher: <a href="#research">Md Iftekhar Ahmed</a></span>
+        </div>
+    </div>
+</footer>
+
+<script>
+(function(){
+    const btn=document.getElementById('themeBtn'),icon=document.getElementById('themeIcon'),html=document.documentElement;
+    function gt(){try{return localStorage.getItem('joinik-theme')||'dark'}catch(e){return'dark'}}
+    function st(t){html.setAttribute('data-theme',t);try{localStorage.setItem('joinik-theme',t)}catch(e){}icon.className=t==='dark'?'bi bi-sun-fill':'bi bi-moon-fill'}
+    st(gt());
+    btn.addEventListener('click',()=>st(gt()==='dark'?'light':'dark'));
+    const nb=document.getElementById('navbar');
+    window.addEventListener('scroll',()=>{nb.style.background=window.scrollY>20?(gt()==='dark'?'rgba(5,16,31,.98)':'rgba(248,250,252,.98)'):''},{ passive:true });
+    const obs=new IntersectionObserver((es)=>{es.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('visible'),i*80)})},{threshold:.1,rootMargin:'0px 0px -60px 0px'});
+    document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+    setInterval(()=>document.querySelectorAll('.cbar').forEach(b=>b.style.height=(Math.random()*70+10)+'%'),2000);
+})();
+</script>
 </body>
 </html>
