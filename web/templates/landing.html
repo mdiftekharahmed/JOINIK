@@ -239,31 +239,25 @@
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIcon = document.getElementById('themeIcon');
         
-        function setTheme(theme) {
+        function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             if (theme === 'dark') {
-                themeIcon.classList.remove('bi-sun-fill');
-                themeIcon.classList.add('bi-moon-stars-fill');
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill'); // Show sun in dark mode
             } else {
-                themeIcon.classList.remove('bi-moon-stars-fill');
-                themeIcon.classList.add('bi-sun-fill');
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-fill'); // Show moon in light mode
             }
         }
         
         // Initialize
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setTheme('dark');
-        } else {
-            setTheme('light');
-        }
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
         
         themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
         });
     </script>
 </body>

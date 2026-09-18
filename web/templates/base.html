@@ -798,32 +798,26 @@ setInterval(updateClock, 1000);
 /* ── Theme Toggle ── */
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const themeIcon = document.getElementById('themeIcon');
-const currentTheme = localStorage.getItem('theme');
 
-// Apply immediately
-if (currentTheme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill'); // Since default HTML is sun, swap to moon if actually light? Wait.
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        themeIcon.classList.remove('bi-sun-fill');
+        themeIcon.classList.add('bi-moon-fill'); // Show moon in light mode
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeIcon.classList.remove('bi-moon-fill');
+        themeIcon.classList.add('bi-sun-fill'); // Show sun in dark mode
+    }
+    localStorage.setItem('theme', theme);
 }
 
-// Ensure icon matches current theme on load
-if (document.documentElement.getAttribute('data-theme') === 'light') {
-    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill'); // Light theme icon (moon to go back to dark)
-} else {
-    themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill'); // Dark theme icon (sun to go to light)
-}
+const savedTheme = localStorage.getItem('theme') || 'dark';
+applyTheme(savedTheme);
 
 themeToggleBtn.addEventListener('click', () => {
-    let theme = document.documentElement.getAttribute('data-theme');
-    if (theme === 'light') {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'dark');
-        themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill');
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-        themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill');
-    }
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 });
 {% include 'alarms/countdown_modal.html' %}
 {% block extra_js %}{% endblock %}
