@@ -21,6 +21,8 @@ class Device(models.Model):
     location_name = models.CharField(max_length=200, blank=True)
     location_x = models.FloatField(default=0.5, help_text="0.0–1.0 for SVG floorplan")
     location_y = models.FloatField(default=0.5)
+    latitude = models.FloatField(default=23.8103, help_text="Latitude for weather API (default Dhaka)")
+    longitude = models.FloatField(default=90.4125, help_text="Longitude for weather API (default Dhaka)")
     weather_location = models.CharField(max_length=100, blank=True, null=True, help_text="City name for the weather widget")
     firmware_version = models.CharField(max_length=50, blank=True)
     tb_access_token = models.CharField(max_length=255, blank=True,

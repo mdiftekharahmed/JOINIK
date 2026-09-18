@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Historical AI Analysis - {{ device.name }}{% endblock %}
+{% block topbar_title %}Historical Analysis{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-left">
+        <h1 class="page-title">Historical AI Analysis</h1>
+        <p class="page-subtitle">Device: {{ device.name }} | 10-Second Tumbling Windows</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn btn-outline">Back to Raw Telemetry</a>
+    </div>
+</div>
+
+{% if results %}
+<div class="card p-0">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Risk Level</th>
+                    <th>Event Type</th>
+                    <th>Persistence Ratio</th>
+                    <th>Vib. Mean</th>
+                    <th>Vib. Max</th>
+                    <th>Motion</th>
+                    <th>Alarm</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr>
+                    <td>{{ res.start_time }}</td>
+                    <td>{{ res.end_time }}</td>
+                    <td>
+                        <span class="badge {% if res.risk_level == 'CRITICAL' %}badge-critical{% elif res.risk_level == 'HIGH' %}badge-high{% elif res.risk_level == 'MEDIUM' %}badge-medium{% elif res.risk_level == 'LOW' %}badge-low{% else %}badge-normal{% endif %}">
+                            {{ res.risk_level }}
+                        </span>
+                    </td>
+                    <td><small>{{ res.event_type }}</small></td>
+                    <td>{{ res.persistence_ratio|floatformat:2 }}</td>
+                    <td>{{ res.vibration_mean|floatformat:2 }}</td>
+                    <td>{{ res.vibration_max|floatformat:1 }}</td>
+                    <td>{{ res.motion_ratio|floatformat:2 }}</td>
+                    <td>
+                        {% if res.alarm %}
+                            <span class="badge badge-critical">Yes</span>
+                        {% else %}
+                            <span class="badge badge-normal">No</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card p-4 text-center">
+    <p class="text-muted">No historical telemetry found for analysis.</p>
+</div>
+{% endif %}
+{% endblock %}

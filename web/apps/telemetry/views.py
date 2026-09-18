@@ -81,3 +81,53 @@ def parameter_update(request, param_id):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+from apps.ai_engine.analyzer import analyze_telemetry_window
+from apps.ai_engine.weather import get_cached_weather
+from datetime import datetime, timezone
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def telemetry_historical_analysis(request, device_id):
+    device = get_object_or_404(Device, tb_device_id=device_id)
+    
+    # Get all rows (limit 10000 for safety, could be larger)
+    rows, _ = get_all_telemetry_rows(str(device.tb_device_id), limit=10000, offset=0)
+    
+    # Sort rows chronologically
+    rows = sorted(rows, key=lambda x: x['ts_ms'])
+    
+    # Window settings
+    WINDOW_SIZE_MS = 10000
+    
+    results = []
+    if rows:
+        weather_data = get_cached_weather(device.id)
+        
+        # Group into 10-second tumbling windows
+        current_window = []
+        window_start_ms = rows[0]['ts_ms']
+        
+        for row in rows:
+            if row['ts_ms'] - window_start_ms >= WINDOW_SIZE_MS:
+                if current_window:
+                    analysis = analyze_telemetry_window(current_window, weather_data)
+                    analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                    analysis['end_time'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                    results.append(analysis)
+                window_start_ms += WINDOW_SIZE_MS
+                current_window = [row]
+            else:
+                current_window.append(row)
+                
+        # Process the last window
+        if current_window:
+            analysis = analyze_telemetry_window(current_window, weather_data)
+            analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            analysis['end_time'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            results.append(analysis)
+            
+    # Reverse so newest is first
+    results.reverse()
+    
+    return render(request, 'telemetry/historical_analysis.html', {'device': device, 'results': results})

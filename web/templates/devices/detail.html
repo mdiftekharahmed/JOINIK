@@ -87,9 +87,14 @@
         <span class="ws-indicator ws-connecting" id="wsStatus">
             <span class="live-dot" style="background: #f59e0b;"></span> Connecting…
         </span>
-        <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn-joinik">
-            <i class="bi bi-table"></i> Full History
-        </a>
+        <div class="header-actions">
+            <a href="{% url 'telemetry_historical_analysis' device.tb_device_id %}" class="btn-joinik" style="background-color: var(--accent); color: white;">
+                <i class="bi bi-cpu"></i> Analyze Historical Data
+            </a>
+            <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn-joinik">
+                <i class="bi bi-table"></i> Raw Telemetry
+            </a>
+        </div>
         <a href="{% url 'scan_sessions_list' device.tb_device_id %}" class="btn-ghost">
             <i class="bi bi-clock-history"></i> Sessions
         </a>

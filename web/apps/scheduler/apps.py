@@ -45,6 +45,27 @@ class SchedulerConfig(AppConfig):
             misfire_grace_time=10,
         )
 
+        # --- Job 1.5: Sync Weather every 15 minutes (900 seconds) ---
+        def _sync_weather_job():
+            from apps.ai_engine.weather import sync_weather_for_all_devices
+            try:
+                sync_weather_for_all_devices()
+            except Exception as e:
+                logger.error(f"[weather] Error syncing weather: {e}")
+
+        scheduler.add_job(
+            _sync_weather_job,
+            trigger='interval',
+            minutes=15,
+            id='sync_weather',
+            replace_existing=True,
+        )
+        # Run it once immediately on startup
+        try:
+            _sync_weather_job()
+        except Exception:
+            pass
+
         # Run the AI / Telemetry Polling Loop VERY fast (1 second) for real-time live data
         scheduler.add_job(
             _process_telemetry_job,

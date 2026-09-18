@@ -4,7 +4,9 @@ from celery import shared_task
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from apps.devices.models import Device
-from apps.core.tb_reader import get_latest_telemetry
+from apps.core.tb_reader import get_latest_telemetry, get_telemetry_range
+from apps.ai_engine.analyzer import analyze_telemetry_window
+from apps.ai_engine.weather import get_cached_weather
 from apps.alarms.models import Alarm
 from .models import RiskAssessment, AIModelVersion
 from django.utils import timezone
@@ -63,15 +65,11 @@ def process_telemetry_and_risk():
         if not latest:
             continue
             
-        # -- Dynamic Parameter Auto-Detection --
-        # Get currently known keys from Django DB
         from apps.telemetry.models import SensorParameter
         known_keys = set(SensorParameter.objects.values_list('key', flat=True))
         
         for key in latest.keys():
             if key not in known_keys:
-                # Discovered a new key not in our Django DB!
-                # Create it but quarantine it from AI to prevent poisoning
                 SensorParameter.objects.create(
                     key=key,
                     display_name=key.replace('_', ' ').title(),
@@ -96,6 +94,14 @@ def process_telemetry_and_risk():
             
         _last_seen_ts[device_id_str] = max_ts
         
+        # --- 10-Second Analysis Window ---
+        now_ms = int(max_ts.timestamp() * 1000)
+        start_ms = now_ms - 10000
+        window_rows = get_telemetry_range(device_id_str, start_ms, now_ms, limit=1000)
+        
+        weather_data = get_cached_weather(device.id)
+        analysis = analyze_telemetry_window(window_rows, weather_data)
+        
         # --- 1. Push Telemetry Update ---
         serializable_latest = {}
         for k, v in latest.items():
@@ -104,6 +110,15 @@ def process_telemetry_and_risk():
                 'ts': v['ts'].strftime('%H:%M:%S') if v['ts'] else '-'
             }
             
+        # Inject generated parameters into telemetry
+        ts_str = max_ts.strftime('%H:%M:%S')
+        for k, v in analysis.items():
+            if k not in ['alarm', 'risk_level', 'risk_score', 'confidence', 'event_type', 'alarm_reason']:
+                serializable_latest[k] = {
+                    'value': v,
+                    'ts': ts_str
+                }
+                
         async_to_sync(channel_layer.group_send)(
             f'device_{device_id_str}',
             {
@@ -112,88 +127,12 @@ def process_telemetry_and_risk():
             }
         )
         
-        # --- 2. Run AI Model ---
-        risk_score = 5.0
-        risk_level = 'NORMAL'
-        trigger_alarm = False
-        triggering_keys = []
-        shap_values_dict = {}
+        # --- 2. Extract Security Parameters ---
+        risk_score = analysis['risk_score']
+        risk_level = analysis['risk_level']
+        trigger_alarm = analysis['alarm']
+        triggering_keys = [analysis['event_type']] # Store the event type as triggering reason
         
-        if ml_model and active_version:
-            # Prepare feature array
-            feature_array = []
-            for f in active_version.feature_list:
-                val = latest.get(f, {}).get('value', 0)
-                if isinstance(val, bool):
-                    val = int(val)
-                feature_array.append(val)
-                
-            X_input = np.array([feature_array])
-            
-            try:
-                # Predict probability of class 1 (anomaly/high risk)
-                if hasattr(ml_model, 'predict_proba'):
-                    probs = ml_model.predict_proba(X_input)[0]
-                    anomaly_prob = probs[1] if len(probs) > 1 else probs[0]
-                else:
-                    # Fallback for models like SVM without proba enabled
-                    pred = ml_model.predict(X_input)[0]
-                    anomaly_prob = 1.0 if pred == 1 else 0.0
-                    
-                risk_score = anomaly_prob * 100
-                
-                if risk_score > 80:
-                    risk_level = 'CRITICAL'
-                    trigger_alarm = True
-                elif risk_score > 60:
-                    risk_level = 'HIGH'
-                    trigger_alarm = True
-                elif risk_score > 30:
-                    risk_level = 'MEDIUM'
-                elif risk_score > 15:
-                    risk_level = 'LOW'
-                    
-                # Compute SHAP
-                if explainer:
-                    shaps = explainer.shap_values(X_input)
-                    # For binary classification, shap_values might be a list [class0, class1] or just class1
-                    if isinstance(shaps, list) and len(shaps) > 1:
-                        shap_arr = shaps[1][0]
-                    else:
-                        shap_arr = shaps[0]
-                        
-                    for i, f in enumerate(active_version.feature_list):
-                        shap_values_dict[f] = float(shap_arr[i])
-                        # If highly contributory, add to triggering keys
-                        if trigger_alarm and shap_arr[i] > 0.05:
-                            triggering_keys.append(f)
-                            
-            except Exception as e:
-                logger.error(f"Inference error on {device_id_str}: {e}")
-                
-        else:
-            # Fallback Rule Engine
-            vibration = latest.get('vibration_intensity', {}).get('value', 0)
-            motion = latest.get('motion', {}).get('value', False)
-            cctv_cut = latest.get('cctv_cut', {}).get('value', False)
-            
-            if vibration > 8:
-                risk_score = 95.0
-                risk_level = 'CRITICAL'
-                trigger_alarm = True
-                triggering_keys.append('vibration_intensity')
-            elif motion and cctv_cut:
-                risk_score = 85.0
-                risk_level = 'HIGH'
-                trigger_alarm = True
-                triggering_keys.extend(['motion', 'cctv_cut'])
-            elif motion:
-                risk_score = 40.0
-                risk_level = 'MEDIUM'
-            elif vibration > 3:
-                risk_score = 25.0
-                risk_level = 'LOW'
-            
         # --- 3. Save Risk Assessment & Alarm ---
         if risk_score != device.current_risk_score:
             device.current_risk_score = risk_score
@@ -205,11 +144,11 @@ def process_telemetry_and_risk():
                 ts=timezone.now(),
                 risk_score=risk_score,
                 risk_level=risk_level,
-                confidence=0.95,
+                confidence=analysis['confidence'],
                 alarm_triggered=trigger_alarm,
-                feature_snapshot={k: v['value'] for k, v in latest.items()},
-                shap_values=shap_values_dict,
-                model_version=active_version if active_version else None
+                feature_snapshot=analysis,
+                shap_values={},
+                model_version=None
             )
             
             if trigger_alarm:
@@ -218,14 +157,13 @@ def process_telemetry_and_risk():
                     device=device,
                     risk_level=risk_level,
                     risk_score=risk_score,
-                    ai_confidence=0.95,
+                    ai_confidence=analysis['confidence'],
                     triggering_keys=triggering_keys,
                     assessment=assessment,
                     status='PENDING',
                     cancellation_deadline=deadline
                 )
                 
-                # Push global Dead-Hand modal trigger
                 async_to_sync(channel_layer.group_send)(
                     "global_alarms",
                     {
@@ -245,17 +183,15 @@ def process_telemetry_and_risk():
                 {
                     'type': 'risk_update',
                     'data': {
-                        'score': risk_score, # Legacy support
-                        'level': risk_level, # Legacy support
+                        'score': risk_score,
+                        'level': risk_level,
                         'badge_class': device.risk_badge_class,
-                        'shap': shap_values_dict,
-                        
-                        # Exact requested parameters from AI
+                        'shap': {},
                         'alarm': trigger_alarm,
                         'risk_level': risk_level,
                         'risk_score': risk_score,
-                        'confidence': 95.0, # Placeholder until AI explicitly provides this
-                        'alarm_reason': f"Anomalies detected in: {', '.join(triggering_keys)}" if trigger_alarm else "Normal behavior"
+                        'confidence': analysis['confidence'],
+                        'alarm_reason': analysis['alarm_reason']
                     }
                 }
             )
