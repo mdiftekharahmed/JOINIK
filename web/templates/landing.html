@@ -1,104 +1,270 @@
-{% extends 'base.html' %}
-{% block title %}Welcome to JOINIK{% endblock %}
-{% block topbar_title %}Home{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to JOINIK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            /* Base Light Theme */
+            --bg-main: #f3f4f6;
+            --bg-sidebar: #ffffff;
+            --bg-topbar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-surface: #f9fafb;
+            --text-primary: #111827;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --border: #e5e7eb;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+        }
 
-{% block extra_head %}
-<style>
-    .landing-hero {
-        text-align: center;
-        padding: 80px 20px;
-        background: var(--bg-card);
-        border-radius: var(--radius);
-        margin: 40px auto;
-        max-width: 800px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-        border: 1px solid var(--border);
-    }
-    .landing-hero h1 {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, var(--accent), #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .landing-hero p {
-        font-size: 1.25rem;
-        color: var(--text-secondary);
-        margin-bottom: 40px;
-        line-height: 1.6;
-    }
-    .landing-cta {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .landing-cta .btn-joinik, .landing-cta .btn-ghost {
-        padding: 14px 28px;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .feature-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 24px;
-        text-align: center;
-        transition: transform var(--transition);
-    }
-    .feature-card:hover {
-        transform: translateY(-5px);
-    }
-    .feature-card i {
-        font-size: 2.5rem;
-        color: var(--accent);
-        margin-bottom: 16px;
-    }
-    .feature-card h3 {
-        font-size: 1.2rem;
-        color: var(--text-primary);
-        margin-bottom: 12px;
-    }
-    .feature-card p {
-        font-size: 0.95rem;
-        color: var(--text-muted);
-    }
-</style>
-{% endblock %}
+        [data-theme="dark"] {
+            --bg-main: #0f111a;
+            --bg-sidebar: #171a23;
+            --bg-topbar: #171a23;
+            --bg-card: #1c202b;
+            --bg-surface: #242936;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --border: #2a3142;
+        }
 
-{% block content %}
-<div class="landing-hero">
-    <h1>Next-Gen IoT Security</h1>
-    <p>Monitor, manage, and secure your connected devices with the power of advanced AI anomaly detection and real-time telemetry analytics.</p>
-    <div class="landing-cta">
-        <a href="{% url 'register' %}" class="btn-joinik">Get Started Today</a>
-        <a href="{% url 'login' %}" class="btn-ghost">Sign In</a>
-    </div>
-</div>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-<div class="features-grid">
-    <div class="feature-card">
-        <i class="bi bi-shield-check"></i>
-        <h3>Proactive Threat Detection</h3>
-        <p>Our AI models analyze telemetry in real-time to detect anomalous behavior and instantly raise alarms.</p>
+        .topbar {
+            height: 64px;
+            background: var(--bg-topbar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-joinik {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background var(--transition);
+        }
+
+        .btn-joinik:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-surface);
+            border-color: var(--text-muted);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            transition: background var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+        }
+
+        .landing-hero {
+            text-align: center;
+            padding: 80px 20px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            margin: 60px auto 40px auto;
+            max-width: 800px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border: 1px solid var(--border);
+        }
+        .landing-hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .landing-hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .landing-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto 60px auto;
+            padding: 0 20px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            transition: transform var(--transition);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            margin-top: 0;
+        }
+        .feature-card p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-title">JOINIK</div>
+        <div class="topbar-right">
+            <a href="{% url 'login' %}" class="btn-ghost">Login</a>
+            <a href="{% url 'register' %}" class="btn-joinik">Register</a>
+            <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme">
+                <i class="bi bi-sun-fill" id="themeIcon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="landing-hero">
+        <h1>Next-Gen IoT Security</h1>
+        <p>Monitor, manage, and secure your connected devices with the power of advanced AI anomaly detection and real-time telemetry analytics.</p>
+        <div class="landing-cta">
+            <a href="{% url 'register' %}" class="btn-joinik" style="padding: 14px 28px; font-size: 1.1rem;">Get Started Today</a>
+            <a href="{% url 'login' %}" class="btn-ghost" style="padding: 14px 28px; font-size: 1.1rem;">Sign In</a>
+        </div>
     </div>
-    <div class="feature-card">
-        <i class="bi bi-cpu"></i>
-        <h3>Unified Device Management</h3>
-        <p>Connect and monitor all your IoT sensors and gateways seamlessly through ThingsBoard integration.</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="bi bi-shield-check"></i>
+            <h3>Proactive Threat Detection</h3>
+            <p>Our AI models analyze telemetry in real-time to detect anomalous behavior and instantly raise alarms.</p>
+        </div>
+        <div class="feature-card">
+            <i class="bi bi-cpu"></i>
+            <h3>Unified Device Management</h3>
+            <p>Connect and monitor all your IoT sensors and gateways seamlessly through ThingsBoard integration.</p>
+        </div>
+        <div class="feature-card">
+            <i class="bi bi-bar-chart-line"></i>
+            <h3>Rich Telemetry Analytics</h3>
+            <p>Visualize critical data points with dynamic charts, gauges, and live metric indicators.</p>
+        </div>
     </div>
-    <div class="feature-card">
-        <i class="bi bi-bar-chart-line"></i>
-        <h3>Rich Telemetry Analytics</h3>
-        <p>Visualize critical data points with dynamic charts, gauges, and live metric indicators.</p>
-    </div>
-</div>
-{% endblock %}
+
+    <script>
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (theme === 'dark') {
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-stars-fill');
+            } else {
+                themeIcon.classList.remove('bi-moon-stars-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            }
+        }
+        
+        // Initialize
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+        } else {
+            setTheme('light');
+        }
+        
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+    </script>
+</body>
+</html>
