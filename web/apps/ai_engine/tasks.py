@@ -178,25 +178,42 @@ def process_telemetry_and_risk():
                 ts=timezone.now(),
                 risk_score=risk_score,
                 risk_level=risk_level,
-                confidence=analysis['confidence'],
+                confidence=analysis.get('confidence', 1.0),
                 alarm_triggered=trigger_alarm,
                 feature_snapshot=analysis,
                 shap_values={},
                 model_version=None
             )
             
-            if trigger_alarm:
+            # User requirement: when medium and high risk detected there should be an alarm generated
+            if trigger_alarm or risk_level in ['MEDIUM', 'HIGH', 'CRITICAL']:
                 deadline = timezone.now() + timezone.timedelta(seconds=10)
                 alarm_obj = Alarm.objects.create(
                     device=device,
                     risk_level=risk_level,
                     risk_score=risk_score,
-                    ai_confidence=analysis['confidence'],
+                    ai_confidence=analysis.get('confidence', 1.0),
                     triggering_keys=triggering_keys,
                     assessment=assessment,
                     status='PENDING',
                     cancellation_deadline=deadline
                 )
+                
+                # Send Web Notification
+                async_to_sync(channel_layer.group_send)(
+                    f'device_{device_id_str}',
+                    {
+                        'type': 'alarm_notification',
+                        'data': {
+                            'alarm_id': str(alarm_obj.id),
+                            'device_name': device.name,
+                            'risk_level': risk_level,
+                            'risk_score': risk_score,
+                            'reason': analysis.get('alarm_reason', 'Security event detected')
+                        }
+                    }
+                )
+                logger.warning(f"New Alarm {alarm_obj.id} triggered for {device_id_str}. Level: {risk_level}")
                 
                 async_to_sync(channel_layer.group_send)(
                     "global_alarms",

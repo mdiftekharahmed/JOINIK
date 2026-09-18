@@ -209,6 +209,54 @@
             {% endfor %}
         </div>
 
+        <!-- Emergency Escalation Settings (Frontend Only Placeholder) -->
+        <div class="card-joinik" style="margin-top: 16px;">
+            <div class="card-header-joinik" style="padding-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span class="card-label">Escalation Settings</span>
+                <i class="bi bi-gear-fill" style="color: var(--text-muted); font-size: 0.9rem;"></i>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- Auto-Call Client -->
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Auto-Call Client</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Notify client instantly upon Medium+ risk</span>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+                        <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--accent); transition: .4s; border-radius: 20px;"></span>
+                    </label>
+                </div>
+                
+                <!-- Auto-Call Emergency Services -->
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 0.85rem; font-weight: 500; color: var(--danger);">Call Emergency Services</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Dispatch local police upon Critical risk</span>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+                        <input type="checkbox" style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-surface); border: 1px solid var(--text-muted); transition: .4s; border-radius: 20px;"></span>
+                    </label>
+                </div>
+                
+                <!-- Auto-SMS -->
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Auto-Messaging (SMS)</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Send incident report summary via SMS</span>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+                        <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--accent); transition: .4s; border-radius: 20px;"></span>
+                    </label>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--accent); text-align: right; font-style: italic;">
+                    *Backend integration coming soon
+                </div>
+            </div>
+        </div>
+
     </div><!-- /left -->
 
     <!-- Right column: sensor grid -->

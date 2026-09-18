@@ -34,3 +34,9 @@ class TelemetryConsumer(AsyncWebsocketConsumer):
             'type': 'risk_update',
             'data': event['data']
         }))
+        
+    async def alarm_notification(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'alarm_notification',
+            'data': event['data']
+        }))
