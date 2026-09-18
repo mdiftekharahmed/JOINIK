@@ -20,37 +20,41 @@
            Design Tokens
         ════════════════════════════════════════ */
         :root {
-            --bg-base:        #080c14;
-            --bg-surface:     #0d1421;
-            --bg-card:        #111927;
-            --bg-card-hover:  #162235;
-            --border:         rgba(99,179,237,0.10);
-            --border-accent:  rgba(99,179,237,0.28);
-            --text-primary:   #e2eaf4;
-            --text-secondary: #7a90a8;
-            --text-muted:     #4a6070;
-            --accent:         #3b9eff;
-            --accent-glow:    rgba(59,158,255,0.14);
-            --success:        #22c55e;
-            --danger:         #ef4444;
+            /* DARK MODE (default) */
+            --bg-base:        #0f1115;
+            --bg-surface:     #16191e;
+            --bg-card:        #1c1f26;
+            --bg-card-hover:  #232730;
+            --border:         #2b303b;
+            --border-accent:  rgba(37,99,235,0.3);
+            --text-primary:   #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted:     #64748b;
+            --accent:         #3b82f6;
+            --accent-hover:   #2563eb;
+            --success:        #10b981;
             --warning:        #f59e0b;
+            --danger:         #ef4444;
+            --info:           #3b82f6;
             --sidebar-w:      240px;
             --topbar-h:       56px;
-            --radius:         12px;
-            --radius-sm:      8px;
-            --transition:     0.18s ease;
+            --radius:         8px;
+            --radius-sm:      6px;
+            --transition:     0.2s ease;
         }
 
         [data-theme="light"] {
-            --bg-base:        #f0f4f8;
+            --bg-base:        #f8fafc;
             --bg-surface:     #ffffff;
             --bg-card:        #ffffff;
-            --bg-card-hover:  #f8fafc;
-            --border:         rgba(0,0,0,0.08);
-            --border-accent:  rgba(59,158,255,0.28);
-            --text-primary:   #1e293b;
+            --bg-card-hover:  #f1f5f9;
+            --border:         #e2e8f0;
+            --border-accent:  rgba(37,99,235,0.3);
+            --text-primary:   #0f172a;
             --text-secondary: #475569;
             --text-muted:     #64748b;
+            --accent:         #2563eb;
+            --accent-hover:   #1d4ed8;
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
