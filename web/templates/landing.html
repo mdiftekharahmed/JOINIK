@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Welcome to JOINIK{% endblock %}
+{% block topbar_title %}Home{% endblock %}
+
+{% block extra_head %}
+<style>
+    .landing-hero {
+        text-align: center;
+        padding: 80px 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        margin: 40px auto;
+        max-width: 800px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        border: 1px solid var(--border);
+    }
+    .landing-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .landing-hero p {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+    .landing-cta {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .landing-cta .btn-joinik, .landing-cta .btn-ghost {
+        padding: 14px 28px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .feature-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        text-align: center;
+        transition: transform var(--transition);
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    .feature-card i {
+        font-size: 2.5rem;
+        color: var(--accent);
+        margin-bottom: 16px;
+    }
+    .feature-card h3 {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    .feature-card p {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing-hero">
+    <h1>Next-Gen IoT Security</h1>
+    <p>Monitor, manage, and secure your connected devices with the power of advanced AI anomaly detection and real-time telemetry analytics.</p>
+    <div class="landing-cta">
+        <a href="{% url 'register' %}" class="btn-joinik">Get Started Today</a>
+        <a href="{% url 'login' %}" class="btn-ghost">Sign In</a>
+    </div>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <i class="bi bi-shield-check"></i>
+        <h3>Proactive Threat Detection</h3>
+        <p>Our AI models analyze telemetry in real-time to detect anomalous behavior and instantly raise alarms.</p>
+    </div>
+    <div class="feature-card">
+        <i class="bi bi-cpu"></i>
+        <h3>Unified Device Management</h3>
+        <p>Connect and monitor all your IoT sensors and gateways seamlessly through ThingsBoard integration.</p>
+    </div>
+    <div class="feature-card">
+        <i class="bi bi-bar-chart-line"></i>
+        <h3>Rich Telemetry Analytics</h3>
+        <p>Visualize critical data points with dynamic charts, gauges, and live metric indicators.</p>
+    </div>
+</div>
+{% endblock %}

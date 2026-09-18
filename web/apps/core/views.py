@@ -7,6 +7,9 @@ from apps.devices.sync import sync_devices_from_thingsboard
 
 
 def dashboard(request):
+    if not request.user.is_authenticated:
+        return render(request, 'landing.html')
+        
     # Sync devices (adds new, renames, removes deleted)
     sync_devices_from_thingsboard()
 
@@ -51,6 +54,7 @@ def dashboard(request):
 
 from django.http import JsonResponse
 
+@login_required
 def dashboard_api(request):
     """JSON endpoint for 1-second AJAX polling on the dashboard."""
     devices = Device.objects.all()

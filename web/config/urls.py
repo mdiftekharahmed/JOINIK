@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', include('apps.core.admin_urls')),
     path('auth/', include('apps.accounts.urls')),
     path('', include('apps.core.urls')),
     path('devices/', include('apps.devices.urls')),
@@ -13,5 +13,4 @@ urlpatterns = [
     path('ai/', include('apps.ai_engine.urls')),
     path('analytics/', include('apps.analytics.urls')),
     path('data/', include('apps.analytics.export_urls')),
-    path('admin-panel/', include('apps.core.admin_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

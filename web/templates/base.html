@@ -687,10 +687,24 @@
             <i class="bi bi-sliders"></i> Sensor Config
         </a>
 
-        <div class="nav-section-label">System</div>
-        <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-gear-fill"></i> Admin
+        {% if user.is_superuser or user.profile.role == 'SYSTEM_ADMIN' %}
+        <div class="nav-section-label">System Admin</div>
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
         </a>
+        <a href="{% url 'admin_users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+            <i class="bi bi-people-fill"></i> Users
+        </a>
+        <a href="{% url 'admin_organizations' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_organizations' %}active{% endif %}">
+            <i class="bi bi-building"></i> Organizations
+        </a>
+        <a href="{% url 'admin_ai_model' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_ai_model' %}active{% endif %}">
+            <i class="bi bi-robot"></i> AI Models
+        </a>
+        <a href="{% url 'admin_audit' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_audit' %}active{% endif %}">
+            <i class="bi bi-shield-lock-fill"></i> Audit Logs
+        </a>
+        {% endif %}
         {% if user.is_authenticated %}
         <a href="{% url 'logout' %}" class="sidebar-link">
             <i class="bi bi-box-arrow-right"></i> Logout
@@ -716,6 +730,10 @@
             <span class="topbar-title">{% block topbar_title %}JOINIK{% endblock %}</span>
         </div>
         <div class="topbar-right">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="btn-ghost" style="padding: 6px 12px; font-size: 0.8rem;">Login</a>
+                <a href="{% url 'register' %}" class="btn-joinik" style="padding: 6px 12px; font-size: 0.8rem;">Register</a>
+            {% endif %}
             <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme">
                 <i class="bi bi-sun-fill" id="themeIcon"></i>
             </button>
