@@ -706,9 +706,12 @@
         </a>
         {% endif %}
         {% if user.is_authenticated %}
-        <a href="{% url 'logout' %}" class="sidebar-link">
-            <i class="bi bi-box-arrow-right"></i> Logout
-        </a>
+        <form action="{% url 'logout' %}" method="post" style="display: block; width: 100%; margin: 0; padding: 0;">
+            {% csrf_token %}
+            <button type="submit" class="sidebar-link" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer; font-family: inherit;">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </form>
         {% endif %}
     </nav>
 
