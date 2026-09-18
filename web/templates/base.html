@@ -10,6 +10,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
     <style>
         /* ════════════════════════════════════════
            Design Tokens
@@ -34,6 +39,18 @@
             --radius:         12px;
             --radius-sm:      8px;
             --transition:     0.18s ease;
+        }
+
+        [data-theme="light"] {
+            --bg-base:        #f0f4f8;
+            --bg-surface:     #ffffff;
+            --bg-card:        #ffffff;
+            --bg-card-hover:  #f8fafc;
+            --border:         rgba(0,0,0,0.08);
+            --border-accent:  rgba(59,158,255,0.28);
+            --text-primary:   #1e293b;
+            --text-secondary: #475569;
+            --text-muted:     #64748b;
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -240,6 +257,21 @@
             display: flex;
             align-items: center;
             gap: 14px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: color var(--transition), background var(--transition);
+        }
+        .theme-toggle:hover {
+            color: var(--text-primary);
+            background: var(--accent-glow);
         }
 
         .live-indicator {
@@ -684,6 +716,9 @@
             <span class="topbar-title">{% block topbar_title %}JOINIK{% endblock %}</span>
         </div>
         <div class="topbar-right">
+            <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme">
+                <i class="bi bi-sun-fill" id="themeIcon"></i>
+            </button>
             <div class="live-indicator" aria-label="Live data streaming">
                 <span class="live-dot"></span>
                 <span>Live</span>
@@ -741,6 +776,37 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+/* ── Theme Toggle ── */
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const themeIcon = document.getElementById('themeIcon');
+const currentTheme = localStorage.getItem('theme');
+
+// Apply immediately
+if (currentTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill'); // Since default HTML is sun, swap to moon if actually light? Wait.
+}
+
+// Ensure icon matches current theme on load
+if (document.documentElement.getAttribute('data-theme') === 'light') {
+    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill'); // Light theme icon (moon to go back to dark)
+} else {
+    themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill'); // Dark theme icon (sun to go to light)
+}
+
+themeToggleBtn.addEventListener('click', () => {
+    let theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'light') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        themeIcon.classList.replace('bi-sun-fill', 'bi-moon-fill');
+    }
+});
 {% include 'alarms/countdown_modal.html' %}
 {% block extra_js %}{% endblock %}
 </body>
