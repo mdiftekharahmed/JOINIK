@@ -159,19 +159,21 @@
                 <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">AI-Generated Parameters</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div style="color: var(--text-secondary);">Alarm:</div>
-                    <div id="aiParamAlarm" style="font-weight: 600; color: var(--text-primary); text-align: right;">False</div>
+                    <div id="aiParamAlarm" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.alarm|yesno:"True,False"|default:"False" }}</div>
                     
                     <div style="color: var(--text-secondary);">Risk Level:</div>
-                    <div id="aiParamLevel" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ device.current_risk_level|default:"NORMAL" }}</div>
+                    <div id="aiParamLevel" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.risk_level|default:"NORMAL" }}</div>
                     
                     <div style="color: var(--text-secondary);">Risk Score:</div>
-                    <div id="aiParamScore" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ device.current_risk_score|floatformat:1 }}</div>
+                    <div id="aiParamScore" style="font-weight: 600; color: var(--text-primary); text-align: right;">{{ latest_analysis.risk_score|floatformat:1|default:"0.0" }}</div>
                     
                     <div style="color: var(--text-secondary);">Confidence:</div>
-                    <div id="aiParamConf" style="font-weight: 600; color: var(--text-primary); text-align: right;">95.0%</div>
+                    <div id="aiParamConf" style="font-weight: 600; color: var(--text-primary); text-align: right;">
+                        {% if latest_analysis %}{{ latest_analysis.confidence|default:1.0|floatformat:2 }}%{% else %}95.0%{% endif %}
+                    </div>
                 </div>
                 <div style="margin-top: 8px; color: var(--text-secondary);">
-                    Reason: <span id="aiParamReason" style="font-weight: 600; color: var(--text-primary);">N/A</span>
+                    Reason: <span id="aiParamReason" style="font-weight: 600; color: var(--text-primary);">{{ latest_analysis.alarm_reason|default:"N/A" }}</span>
                 </div>
             </div>
             
@@ -409,10 +411,10 @@ function updateRisk(data) {
     const aiReason = document.getElementById('aiParamReason');
     
     if (aiAlarm && data.alarm !== undefined) aiAlarm.textContent = data.alarm ? 'True' : 'False';
-    if (aiLevel && data.risk_level !== undefined) aiLevel.textContent = data.risk_level;
-    if (aiScore && data.risk_score !== undefined) aiScore.textContent = parseFloat(data.risk_score).toFixed(1);
+    if (aiLevel) aiLevel.textContent = data.risk_level || data.level || "NORMAL";
+    if (aiScore) aiScore.textContent = parseFloat(data.risk_score || data.score || 0).toFixed(1);
     if (aiConf && data.confidence !== undefined) aiConf.textContent = parseFloat(data.confidence).toFixed(1) + '%';
-    if (aiReason && data.alarm_reason !== undefined) aiReason.textContent = data.alarm_reason;
+    if (aiReason) aiReason.textContent = data.alarm_reason || data.reason || "N/A";
     
     if (data.shap && Object.keys(data.shap).length > 0) {
         shapWrap.style.display = 'block';

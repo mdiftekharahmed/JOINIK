@@ -237,12 +237,10 @@ def process_telemetry_and_risk():
                         'score': risk_score,
                         'level': risk_level,
                         'badge_class': device.risk_badge_class,
-                        'shap': {},
                         'alarm': trigger_alarm,
-                        'risk_level': risk_level,
-                        'risk_score': risk_score,
-                        'confidence': analysis['confidence'],
-                        'alarm_reason': analysis['alarm_reason']
+                        'confidence': analysis.get('confidence', 1.0) * 100, # Frontend expects percentage
+                        'reason': analysis.get('alarm_reason', 'N/A'),
+                        'shap': {},
                     }
                 }
             )
