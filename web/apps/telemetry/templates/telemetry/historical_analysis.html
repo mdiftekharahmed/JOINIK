@@ -19,14 +19,14 @@
         <h1 class="page-title">Historical AI Analysis</h1>
         <p class="page-subtitle">Device: {{ device.name }} | 10-Second Tumbling Windows</p>
     </div>
-    <div class="header-actions">
-        <form method="POST" action="{% url 'telemetry_historical_analysis' device.tb_device_id %}" style="display:inline;">
+    <div class="header-actions" style="display: flex; gap: 12px; align-items: center;">
+        <form method="POST" action="{% url 'telemetry_historical_analysis' device.tb_device_id %}" style="margin: 0;">
             {% csrf_token %}
-            <button type="submit" name="save_to_db" value="true" class="btn btn-outline" style="border-color: var(--accent); color: var(--accent);">
+            <button type="submit" name="save_to_db" value="true" class="btn-joinik">
                 <i class="bi bi-save"></i> Save Results to Database
             </button>
         </form>
-        <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn btn-outline">Back to Raw Telemetry</a>
+        <a href="{% url 'telemetry_table' device.tb_device_id %}" class="btn-ghost">Back to Raw Telemetry</a>
     </div>
 </div>
 
