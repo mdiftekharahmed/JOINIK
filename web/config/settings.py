@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': env('TB_DB_NAME'),
         'USER': env('TB_DB_USER'),
         'PASSWORD': env('TB_DB_PASSWORD'),
-        'HOST': '172.16.12.223', # env('TB_DB_HOST'),
+        'HOST': env('TB_DB_HOST'),
         'PORT': env('TB_DB_PORT'),
         'OPTIONS': {'options': '-c default_transaction_read_only=on'},
     },
@@ -151,7 +151,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ── ThingsBoard ─────────────────────────────────────────────────────────────
-TB_URL = 'http://172.16.12.223:8080' # env('TB_URL')
+TB_URL = env('TB_URL')
 TB_ADMIN_EMAIL = env('TB_ADMIN_EMAIL')
 TB_ADMIN_PASSWORD = env('TB_ADMIN_PASSWORD')
 JOINIK_MODULE_01_TB_ID = env('JOINIK_MODULE_01_TB_ID')
