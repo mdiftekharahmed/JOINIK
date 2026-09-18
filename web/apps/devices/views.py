@@ -75,7 +75,7 @@ def device_detail(request, device_id):
     weather_data = get_current_weather(device.weather_location)
     
     from apps.ai_engine.models import AnalysisResult
-    latest_analysis = AnalysisResult.objects.using('analysis_db').filter(device=device).order_by('-ts').first()
+    latest_analysis = AnalysisResult.objects.using('analysis_db').filter(device_id=device.id).order_by('-ts').first()
     
     context = {
         'device': device,
