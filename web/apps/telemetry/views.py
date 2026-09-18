@@ -115,6 +115,11 @@ def telemetry_historical_analysis(request, device_id):
             if row['ts_ms'] - window_start_ms >= WINDOW_SIZE_MS:
                 if current_window:
                     analysis = analyze_telemetry_window(current_window, weather_data)
+                    # Format raw row timestamps
+                    for r in current_window:
+                        r['ts_str'] = datetime.fromtimestamp(r['ts_ms'] / 1000, tz=timezone.utc).strftime('%H:%M:%S.%f')[:-3]
+                        
+                    analysis['raw_rows'] = current_window
                     analysis['raw_ts'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc)
                     analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
                     analysis['end_time'] = analysis['raw_ts'].strftime('%Y-%m-%d %H:%M:%S')
@@ -127,6 +132,11 @@ def telemetry_historical_analysis(request, device_id):
         # Process the last window
         if current_window:
             analysis = analyze_telemetry_window(current_window, weather_data)
+            
+            for r in current_window:
+                r['ts_str'] = datetime.fromtimestamp(r['ts_ms'] / 1000, tz=timezone.utc).strftime('%H:%M:%S.%f')[:-3]
+                
+            analysis['raw_rows'] = current_window
             analysis['raw_ts'] = datetime.fromtimestamp((window_start_ms + WINDOW_SIZE_MS) / 1000, tz=timezone.utc)
             analysis['start_time'] = datetime.fromtimestamp(window_start_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
             analysis['end_time'] = analysis['raw_ts'].strftime('%Y-%m-%d %H:%M:%S')
@@ -146,12 +156,25 @@ def telemetry_historical_analysis(request, device_id):
                     'vibration_mean': res.get('vibration_mean', 0.0),
                     'vibration_max': res.get('vibration_max', 0.0),
                     'vibration_min': res.get('vibration_min', 0.0),
+                    'vibration_std': res.get('vibration_std', 0.0),
                     'persistence_ratio': res.get('persistence_ratio', 0.0),
+                    'motion_samples': res.get('motion_samples', 0),
                     'motion_ratio': res.get('motion_ratio', 0.0),
                     'abnormal_samples': res.get('abnormal_samples', 0),
                     'total_samples': res.get('total_samples', 0),
                     'accel_magnitude': res.get('accel_magnitude', 0.0),
+                    'accel_max': res.get('accel_max', 0.0),
+                    'accel_mean': res.get('accel_mean', 0.0),
                     'gyro_magnitude': res.get('gyro_magnitude', 0.0),
+                    'gyro_max': res.get('gyro_max', 0.0),
+                    'gyro_mean': res.get('gyro_mean', 0.0),
+                    'powercut': res.get('powercut', 0),
+                    'cctv_cut': res.get('cctv_cut', 0),
+                    'weather_state': res.get('weather_state', 'UNKNOWN'),
+                    'storm_flag': res.get('storm_flag', False),
+                    'rain_intensity': res.get('rain_intensity', 0.0),
+                    'confidence': res.get('confidence', 1.0),
+                    'alarm_reason': res.get('alarm_reason', ''),
                 }
             )
             saved_count += 1

@@ -86,9 +86,17 @@ DATABASES = {
         'PORT': env('TB_DB_PORT'),
         'OPTIONS': {'options': '-c default_transaction_read_only=on'},
     },
+    'analysis_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'joinik_analysis',
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+    }
 }
 
-DATABASE_ROUTERS = ['apps.core.db_router.ThingsBoardRouter']
+DATABASE_ROUTERS = ['apps.core.db_router.ThingsBoardRouter', 'apps.ai_engine.db_router.AnalysisRouter']
 
 # ── Cache / Channels ────────────────────────────────────────────────────────
 REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379/0')

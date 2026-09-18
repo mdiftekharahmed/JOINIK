@@ -74,6 +74,55 @@
                         {% endif %}
                     </td>
                 </tr>
+                <tr>
+                    <td colspan="11" style="padding: 0; border: none;">
+                        <details style="margin: 0.5rem 1rem;">
+                            <summary style="cursor: pointer; color: var(--accent); font-weight: 500; font-size: 0.9rem;">View Raw Sensor Data ({{ res.total_samples }} samples)</summary>
+                            <div class="table-responsive mt-2 mb-3" style="background-color: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                <table class="table table-sm" style="font-size: 0.85rem; margin-bottom: 0;">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Accel (X, Y, Z)</th>
+                                            <th>Gyro (X, Y, Z)</th>
+                                            <th>Hardness</th>
+                                            <th>Motion</th>
+                                            <th>Power Cut</th>
+                                            <th>CCTV Cut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for raw in res.raw_rows %}
+                                        <tr>
+                                            <td>{{ raw.ts_str }}</td>
+                                            <td>{{ raw.accel_x|floatformat:1 }}, {{ raw.accel_y|floatformat:1 }}, {{ raw.accel_z|floatformat:1 }}</td>
+                                            <td>{{ raw.gyro_x|floatformat:1 }}, {{ raw.gyro_y|floatformat:1 }}, {{ raw.gyro_z|floatformat:1 }}</td>
+                                            <td>
+                                                {% if raw.hardness > 40 %}
+                                                <span style="color: #ef4444; font-weight: bold;">{{ raw.hardness }}</span>
+                                                {% elif raw.hardness > 15 %}
+                                                <span style="color: #f59e0b; font-weight: bold;">{{ raw.hardness }}</span>
+                                                {% else %}
+                                                {{ raw.hardness }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if raw.motion %}<span style="color: #ef4444;">Yes</span>{% else %}No{% endif %}
+                                            </td>
+                                            <td>
+                                                {% if raw.powercut %}<span style="color: #ef4444;">Yes</span>{% else %}No{% endif %}
+                                            </td>
+                                            <td>
+                                                {% if raw.cctv_cut %}<span style="color: #ef4444;">Yes</span>{% else %}No{% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
