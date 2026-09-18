@@ -73,6 +73,14 @@
     .ws-connecting { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
     .ws-connected  { background: rgba(34,197,94,0.12);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3);  }
     .ws-error      { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3);  }
+    
+    /* ── Wide cards ── */
+    .sensor-card-wide {
+        grid-column: span 2;
+    }
+    @media (max-width: 480px) {
+        .sensor-card-wide { grid-column: 1 / -1; }
+    }
 </style>
 {% endblock %}
 
@@ -268,7 +276,7 @@
         <div style="padding: 16px; flex: 1;">
             <div class="grid-sensors" id="sensorGrid">
                 {% for key, data in latest.items %}
-                <div class="sensor-card" id="sensor-wrap-{{ key }}">
+                <div class="sensor-card {% if key in 'device_mac,timestamp,scan_timestamp' %}sensor-card-wide{% endif %}" id="sensor-wrap-{{ key }}">
                     <div class="sensor-key">{{ key }}</div>
                     <div class="sensor-val" id="sensor-val-{{ key }}">{{ data.value }}</div>
                     <div class="sensor-ts" id="sensor-ts-{{ key }}">{{ data.ts|date:"H:i:s"|default:"–" }}</div>
@@ -357,6 +365,9 @@ function updateSensors(data) {
             // Create new card dynamically
             wrap = document.createElement('div');
             wrap.className = 'sensor-card';
+            if (['device_mac', 'timestamp', 'scan_timestamp'].includes(key)) {
+                wrap.classList.add('sensor-card-wide');
+            }
             wrap.id = `sensor-wrap-${key}`;
             wrap.innerHTML = `
                 <div class="sensor-key">${key}</div>
