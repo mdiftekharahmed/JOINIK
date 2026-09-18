@@ -90,14 +90,14 @@ def analyze_telemetry_window(rows, weather_data=None):
     
     event_type = "NORMAL_MOTION" if any_motion else "NORMAL"
     alarm = 0
-    risk_level = "LOW"
+    risk_level = "NORMAL"
     risk_score = 0.0
-    confidence = min(1.0, total_samples / 10.0) # Lower confidence if few samples in 10s
+    confidence = min(1.0, total_samples / 10.0)  # Lower confidence if few samples in 10s
     alarm_reason = "Normal behavior detected"
     
     # Helper to calculate base risk score based on multi-sensor evidence
     evidence_score = 0
-    evidence_score += (persistence_ratio * 30) # up to 30 for persistent vibration
+    evidence_score += (persistence_ratio * 30)  # up to 30 for persistent vibration
     if persistent_accel: evidence_score += 15
     if persistent_gyro: evidence_score += 15
     if any_motion: evidence_score += 10
@@ -154,8 +154,31 @@ def analyze_telemetry_window(rows, weather_data=None):
         risk_level = "LOW"
         alarm_reason = "Strong isolated vibration detected without sustained motion"
         
-    # CASE 1 is the default Normal/Passerby.
-    
+    # CASE 1: NORMAL / QUIET — compute a real score from the raw sensor magnitudes
+    else:
+        # Derive a continuous baseline score from actual sensor activity (0–20 range)
+        # accel_mean hovering around ~1.0g (gravity) is normal; deviations from 1g = activity
+        accel_deviation = abs(accel_mean - 1.0)            # 0 = perfect static, higher = movement
+        norm_accel = min(accel_deviation / 1.0, 1.0)       # normalise to 0–1 (1.0g deviation = max)
+        norm_gyro  = min(gyro_mean / 10.0, 1.0)            # 10 deg/s = max for NORMAL case
+        norm_vib   = min(vibration_mean / HARDNESS_MODERATE, 1.0)
+        norm_motion = motion_ratio                          # already 0–1
+        
+        baseline_score = (
+            norm_accel  * 8.0 +   # up to  8 pts from accel deviation
+            norm_gyro   * 6.0 +   # up to  6 pts from gyro
+            norm_vib    * 4.0 +   # up to  4 pts from vibration
+            norm_motion * 2.0     # up to  2 pts from any motion samples
+        )
+        risk_score = round(min(baseline_score, 20.0), 1)
+        
+        if risk_score >= 10.0:
+            risk_level = "LOW"
+            alarm_reason = "Slight sensor activity — within acceptable limits"
+        else:
+            risk_level = "NORMAL"
+            alarm_reason = "All sensors within normal range"
+
     # Adjust score if weather is stormy (unless it's an infrastructure or confirmed tamper event)
     if storm_flag and event_type not in ["POSSIBLE_INTRUSION", "INFRASTRUCTURE_INTERRUPTION"]:
         risk_score = max(0.0, risk_score - 10.0)
